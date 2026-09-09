@@ -1,0 +1,27 @@
+@rendermode InteractiveServer
+
+<div class="clock-card rounded-4 p-4 mt-5">
+    <div class="d-flex align-items-center gap-3 mb-2">
+        <span class="display-6">🕐</span>
+        <h2 class="h5 mb-0">الوقت الآن</h2>
+    </div>
+    <p class="clock-time fs-2 mb-1" dir="ltr">@timeText</p>
+    <p class="text-muted mb-3">@dateText</p>
+    <button type="button" class="btn btn-sm btn-outline-primary" @onclick="Refresh">🔄 تحديث الوقت</button>
+</div>
+
+@code {
+    private String timeText = "";
+    private String dateText = "";
+
+    protected override void OnInitialized()
+    {
+        Refresh();
+    }
+
+    private void Refresh()
+    {
+        timeText = DateTime.Now.ToShortTimeString();
+        dateText = DateTime.Now.ToShortDateString();
+    }
+}

@@ -1,0 +1,52 @@
+@rendermode InteractiveServer
+
+@using time.Models
+@using time.Services
+
+<li class="list-group-item d-flex align-items-center gap-3 @ListItemClass()">
+    <button type="button" class="btn btn-sm @ProgressButtonClass()" @onclick="Toggle" title="تبديل حالة الإنجاز" aria-label="تبديل حالة الإنجاز">@DoneMark()</button>
+    <div class="flex-grow-1">
+        <div class="@TitleClass()">@Item.title</div>
+        @if (Item.notes.Length != 0)
+        {
+            <small class="text-muted d-block">@Item.notes</small>
+        }
+        <small class="text-secondary">أُضيفت: @Item.createdAt</small>
+    </div>
+    <button type="button" class="btn btn-outline-danger btn-sm" @onclick="Delete" title="حذف المهمة" aria-label="حذف المهمة">🗑</button>
+</li>
+
+@code {
+    [Parameter]
+    public TodoItem? Item { get; set; }
+
+    private String ListItemClass()
+    {
+        return Item.done ? "task-done" : "";
+    }
+
+    private String TitleClass()
+    {
+        return Item.done ? "task-done-text text-decoration-line-through" : "";
+    }
+
+    private String DoneMark()
+    {
+        return Item.done ? "✔" : "○";
+    }
+
+    private String ProgressButtonClass()
+    {
+        return Item.done ? "btn-success" : "btn-outline-secondary";
+    }
+
+    private void Toggle()
+    {
+        TaskRepository.shared().Toggle(Item.id);
+    }
+
+    private void Delete()
+    {
+        TaskRepository.shared().Delete(Item.id);
+    }
+}

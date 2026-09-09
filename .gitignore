@@ -1,0 +1,24 @@
+# ===== Build output (new .NET CLI) =====
+target/
+build/
+out/
+obj/
+bin/
+.dot/
+
+# ===== Runtime data =====
+data/tasks.json
+data/*.json
+
+# ===== IDE / editor =====
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# ===== OS files =====
+.DS_Store
+Thumbs.db
+
+# ===== Logs =====
+*.log

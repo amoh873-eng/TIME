@@ -1,0 +1,41 @@
+﻿@page "/"
+
+<PageTitle>Time — الرئيسية</PageTitle>
+
+<div class="hero-section">
+    <h1 class="display-4 fw-bold">⏱ Time</h1>
+    <p class="lead mb-3">
+        تطبيق ويب كامل لإدارة المهام وتنظيم الوقت — مبني على
+        <strong>ASP.NET Core</strong> مع قوالب <strong>Razor</strong> ومكوّنات <strong>Blazor</strong> التفاعلية.
+    </p>
+    <a class="btn btn-primary btn-lg mt-3" href="tasks">📋 اذهب إلى المهام</a>
+</div>
+
+<div class="row g-4 mt-5">
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">🧾 صفحات Razor</h5>
+                <p class="card-text">صفحات تُعرض من الخادم مباشرةً عبر قوالب Razor، بمخرجات HTML سريعة وآمنة.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">⚡ مكوّنات Blazor</h5>
+                <p class="card-text">مكوّنات تفاعلية تعمل على الخادم لتحديث الواجهة فوراً دون إعادة تحميل الصفحة.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">💾 حفظ تلقائي</h5>
+                <p class="card-text">تُحفظ المهام تلقائياً في ملف JSON محلي وتُستعاد عند إعادة تشغيل التطبيق.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<Clock />

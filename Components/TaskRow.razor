@@ -6,8 +6,8 @@
 <li class="list-group-item d-flex align-items-center gap-3 @ListItemClass()">
     <button type="button" class="btn btn-sm @ProgressButtonClass()" @onclick="Toggle" title="تبديل حالة الإنجاز" aria-label="تبديل حالة الإنجاز">@DoneMark()</button>
     <div class="flex-grow-1">
-        <div class="@TitleClass()">@Item.title</div>
-        @if (Item.notes.Length != 0)
+        <div class="@TitleClass()">@Item!.title</div>
+        @if (Item!.notes.Length != 0)
         {
             <small class="text-muted d-block">@Item.notes</small>
         }
@@ -20,33 +20,48 @@
     [Parameter]
     public TodoItem? Item { get; set; }
 
+    /// <summary>يُستدعى بعد أي تغيير (تبديل/حذف) ليُحدّث المكوّن الأب الواجهة والعدّادات.</summary>
+    [Parameter]
+    public EventCallback OnChanged { get; set; }
+
     private String ListItemClass()
     {
-        return Item.done ? "task-done" : "";
+        return Item!.done ? "task-done" : "";
     }
 
     private String TitleClass()
     {
-        return Item.done ? "task-done-text text-decoration-line-through" : "";
+        return Item!.done ? "task-done-text text-decoration-line-through" : "";
     }
 
     private String DoneMark()
     {
-        return Item.done ? "✔" : "○";
+        return Item!.done ? "✔" : "○";
     }
 
     private String ProgressButtonClass()
     {
-        return Item.done ? "btn-success" : "btn-outline-secondary";
+        return Item!.done ? "btn-success" : "btn-outline-secondary";
     }
 
-    private void Toggle()
+    private async Task Toggle()
     {
+        if (Item is null)
+        {
+            return;
+        }
         TaskRepository.shared().Toggle(Item.id);
+        await OnChanged.InvokeAsync();
     }
 
-    private void Delete()
+    private async Task Delete()
     {
+        if (Item is null)
+        {
+            return;
+        }
+
         TaskRepository.shared().Delete(Item.id);
+        await OnChanged.InvokeAsync();
     }
 }

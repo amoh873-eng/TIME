@@ -46,9 +46,9 @@ dotnet build
 ## الميزات
 
 - 📋 صفحة مهام كاملة: إضافة، تبديل حالة الإنجاز، حذف.
-- 🧮 عدّادات فورية (الإجمالي / المكتملة / المتبقية).
-- 🕐 مكوّن ساعة تفاعلي يعرض الوقت والتاريخ بالعربية.
-- 💾 حفظ تلقائي في `data/tasks.json` وإعادة تحميل عند التشغيل.
+- 🧮 عدّادات فورية (الإجمالي / المكتملة / المتبقية) تتحدّث فورًا عند أي تغيير.
+- 🕐 مكوّن ساعة تفاعلي يعرض الوقت والتاريخ بالعربية ويتحدّث تلقائيًا كل ثانية.
+- 💾 حفظ تلقائي في `data/tasks.json` عبر `System.Text.Json` وإعادة تحميل عند التشغيل.
 - 🎨 تصميم Bootstrap متجاوب مع اتجاه RTL.
 
 ---
@@ -62,8 +62,8 @@ time/
 ├── Components/
 │   ├── App.razor              # مستند HTML الجذر (RTL / العربية)
 │   ├── Routes.razor           # إعدادات الموجّه (Router)
-│   ├── Clock.razor            # مكوّن Blazor تفاعلي: الساعة
-│   ├── TaskRow.razor          # صف مهمة تفاعلي (معامل TodoItem)
+│   ├── Clock.razor            # مكوّن Blazor تفاعلي: ساعة حيّة (تحديث كل ثانية)
+│   ├── TaskRow.razor          # صف مهمة تفاعلي (معامل TodoItem + EventCallback)
 │   ├── Layout/
 │   │   ├── MainLayout.razor   # التخطيط الرئيسي
 │   │   └── NavMenu.razor      # قائمة التنقل
@@ -75,7 +75,7 @@ time/
 ├── Models/
 │   └── TodoItem.cs            # سجلّ المهمة (record)
 ├── Services/
-│   └── TaskRepository.cs      # مخزن ملفات JSON (قراءة/كتابة يدوية)
+│   └── TaskRepository.cs      # مخزن ملفات JSON (System.Text.Json، Singleton)
 ├── Properties/
 │   └── launchSettings.json    # إعدادات التشغيل المحلي
 └── wwwroot/                   # الملفات الثابتة (CSS بـootstrap…)

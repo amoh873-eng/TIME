@@ -3,7 +3,6 @@
 
 @using time.Models
 @using time.Services
-@using System.Collections
 
 <PageTitle>المهام — Time</PageTitle>
 
@@ -45,14 +44,14 @@ else
     <ul class="list-group mt-4">
         @foreach (var task in tasks)
         {
-            <TaskRow Item="(TodoItem) task" />
+            <TaskRow Item="task" OnChanged="OnTaskChanged" />
         }
     </ul>
 }
 
 @code {
     private readonly TaskRepository repository = TaskRepository.shared();
-    private Object?[] tasks = new Object[0];
+    private TodoItem[] tasks = Array.Empty<TodoItem>();
     private String newTitle = "";
     private String newNotes = "";
     private String message = "";
@@ -65,12 +64,20 @@ else
         Reload();
     }
 
+    /// <summary>يُستدعى بعد تغيير أي مهمة (تبديل/حذف) لإعادة حساب القائمة والعدّادات.</summary>
+    private void OnTaskChanged()
+    {
+        message = "";
+        Reload();
+    }
+
     private void AddTask()
     {
         if (newTitle.Trim().Length == 0)
         {
             return;
         }
+
         repository.Add(newTitle.Trim(), newNotes.Trim());
         newTitle = "";
         newNotes = "";
@@ -80,25 +87,21 @@ else
 
     private void Reload()
     {
-        ArrayList undone = new ArrayList();
-        ArrayList done = new ArrayList();
-        Object?[] all = repository.All();
-        for (int i = 0; i < all.Length; i++)
+        List<TodoItem> undone = new List<TodoItem>();
+        List<TodoItem> done = new List<TodoItem>();
+        foreach (TodoItem item in repository.All())
         {
-            TodoItem t = (TodoItem) all[i];
-            if (t.done)
+            if (item.done)
             {
-                done.Add(t);
+                done.Add(item);
             }
             else
             {
-                undone.Add(t);
+                undone.Add(item);
             }
         }
-        for (int i = 0; i < done.Count; i++)
-        {
-            undone.Add(done.ToArray()[i]);
-        }
+
+        undone.AddRange(done);
         tasks = undone.ToArray();
         totalCount = tasks.Length;
         doneCount = done.Count;

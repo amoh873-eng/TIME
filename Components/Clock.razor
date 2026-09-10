@@ -1,4 +1,6 @@
 @rendermode InteractiveServer
+@implements IDisposable
+@using System.Globalization
 
 <div class="clock-card rounded-4 p-4 mt-5">
     <div class="d-flex align-items-center gap-3 mb-2">
@@ -11,17 +13,40 @@
 </div>
 
 @code {
+    private static readonly CultureInfo Arabic = CultureInfo.GetCultureInfo("ar-EG");
+    private System.Threading.Timer? timer;
     private String timeText = "";
     private String dateText = "";
 
     protected override void OnInitialized()
     {
         Refresh();
+        // تحديث تلقائي كل ثانية لعرض ساعة حيّة.
+        timer = new System.Threading.Timer(
+            _ => OnTick(),
+            null,
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(1));
+    }
+
+    private void OnTick()
+    {
+        _ = InvokeAsync(() =>
+        {
+            Refresh();
+            StateHasChanged();
+        });
     }
 
     private void Refresh()
     {
-        timeText = DateTime.Now.ToShortTimeString();
-        dateText = DateTime.Now.ToShortDateString();
+        DateTime now = DateTime.Now;
+        timeText = now.ToString("HH:mm:ss", Arabic);
+        dateText = now.ToString("dddd، d MMMM yyyy", Arabic);
+    }
+
+    public void Dispose()
+    {
+        timer?.Dispose();
     }
 }

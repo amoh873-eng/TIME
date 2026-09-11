@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<title>اختبار ذاتي لمحرّك المخططات ثلاثية الأبعاد</title>
+<link rel="stylesheet" href="/assets/shell.css?v=1" />
+</head>
+<body>
+<div class="chartcard" style="width:520px">
+  <div class="cbody">
+    <div class="stage"><canvas id="c1" width="480" height="300" style="width:480px;height:300px"></canvas>
+      <div class="tipbox"></div></div>
+    <div class="legend" data-legend></div>
+  </div>
+</div>
+<div class="chartcard" style="width:520px">
+  <div class="cbody">
+    <div class="stage"><canvas id="c2" width="480" height="300" style="width:480px;height:300px"></canvas>
+      <div class="tipbox"></div></div>
+    <div class="legend" data-legend></div>
+  </div>
+</div>
+<pre id="out">لم يبدأ الاختبار</pre>
+<!-- شاشة مخفية (كحالة القائمة الجانبية): لا تُرسم إلا عند إظهارها -->
+<div class="screen off" id="hiddenScreen" style="width:900px">
+  <div class="chartcard">
+    <div class="cbody">
+      <div class="stage"><canvas id="c3"></canvas><div class="tipbox"></div></div>
+      <div class="legend" data-legend></div>
+    </div>
+  </div>
+</div>
+<script src="/assets/shell.js?v=1"></script>
+<script>
+(function () {
+  var log = [];
+  function ok(t, c, d) { log.push("[" + (c ? "PASS" : "FAIL") + "] " + t + " — " + d); }
+  var P = TIME.colors;
+
+  var pieSlices = [
+    { label: "أيام عمل", value: 50, color: P.ok, pct: 50, share: 50 },
+    { label: "غياب", value: 30, color: P.bad, pct: 30, share: 30 },
+    { label: "عطل", value: 20, color: P.warn, pct: 20, share: 20 }
+  ];
+  var donutSlices = [
+    { label: "معلَّق", value: 384419, color: P.warn, pct: 100, share: 100 },
+    { label: "محتسب", value: 0, color: P.gray, pct: 0, share: 0 }
+  ];
+  TIME.chart("#c1", { mode: "pie", slices: pieSlices, animate: false, height: 300, unit: "يوم" });
+  TIME.chart("#c2", { mode: "donut", slices: donutSlices, animate: false, height: 300, hole: 0.5,
+    centerValue: "100%", centerLabel: "نسبة" });
+
+  function grab(id) {
+    var cv = document.getElementById(id), ctx = cv.getContext("2d");
+    return { cv: cv, ctx: ctx, w: cv.width, h: cv.height, d: ctx.getImageData(0, 0, cv.width, cv.height).data };
+  }
+  function at(o, x, y) { var i = (y * o.w + x) * 4; return [o.d[i], o.d[i + 1], o.d[i + 2], o.d[i + 3]]; }
+  function lum(c) { return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; }
+  function solidCount(o) { var n = 0; for (var i = 3; i < o.d.length; i += 4) if (o.d[i] > 0) n++; return n; }
+  function distinct(o) {
+    var set = {};
+    for (var i = 0; i < o.d.length; i += 4) if (o.d[i + 3] > 0) set[(o.d[i] << 16) | (o.d[i + 1] << 8) | o.d[i + 2]] = 1;
+    return Object.keys(set).length;
+  }
+
+  /* ---------- القرص الكامل (pie) ---------- */
+  var a = grab("c1");
+  var solidA = solidCount(a), colorsA = distinct(a);
+  ok("القرص الكامل: رُسم فعلياً على اللوحة", solidA > 20000, "بكسلات مرئية=" + solidA);
+  ok("القرص الكامل: تدرّجات ولمعة (ألوان متعددة)", colorsA > 300, "ألوان مميزة=" + colorsA);
+
+  var cx = Math.round(a.w / 2);
+  var ky = 0.56, rx = Math.min(a.w * 0.40, 152), ry = Math.round(rx * ky), depth = Math.round(rx * 0.19);
+  var cy = Math.round(a.h * 0.44);
+  var top = at(a, cx, cy - 40);                 // وجه علوي (خلفي)
+  var wall = at(a, cx, cy + ry + 12);           // جدار مجسَّم أسفل الوجه العلوي
+  ok("القرص الكامل: طبقة الوجه العلوي مرسومة", top[3] > 200, "alpha=" + top[3]);
+  ok("الجدار المجسَّم أغمق من الوجه العلوي (عمق ثلاثي الأبعاد)",
+    wall[3] > 200 && lum(wall) < lum(top) * 0.92,
+    "سطوع الجدار=" + Math.round(lum(wall)) + " | سطوع الوجه=" + Math.round(lum(top)) +
+    " | عمق=" + depth + "px");
+  var below = at(a, cx, cy + ry + depth + 26);
+  ok("خارج القرص شفاف (لا رسم زائد)", below[3] === 0, "alpha=" + below[3]);
+
+  /* ---------- المخطط الحلقي (donut) ---------- */
+  var b = grab("c2");
+  var solidB = solidCount(b);
+  var cx2 = Math.round(b.w / 2), cy2 = Math.round(b.h * 0.44);
+  var rx2 = Math.min(b.w * 0.40, 152), rIn2 = Math.round(rx2 * 0.5), ryIn2 = Math.round(rIn2 * ky);
+  var hole = at(b, cx2, cy2 - Math.round(ryIn2 * 0.7));     // داخل الفتحة الوسطية
+  var ring = at(b, cx2 + Math.round(rx2 * 0.72), cy2);      // داخل شريط الحلقة
+  ok("المخطط الحلقي: الحلقة مرسومة", solidB > 12000 && ring[3] > 200, "بكسلات=" + solidB + " | حلقة alpha=" + ring[3]);
+  ok("المخطط الحلقي: فتحة الوسط مُفرَّغة فعلاً (شفافة)", hole[3] === 0, "alpha=" + hole[3]);
+
+  /* ---------- شاشة مخفية ثم تُفتح من القائمة: يجب أن يُعاد ضبط حجم المخطط ---------- */
+  TIME.chart("#c3", { mode: "pie", slices: pieSlices, animate: false });
+  var w1 = document.getElementById("c3").width;
+  ok("مخطط داخل شاشة مخفية: لا يتشوّه عند الإخفاء", w1 > 0, "عرض مبدئي=" + w1 + "px");
+
+  setTimeout(function () {                      // كأن المستخدم ضغط عنصر القائمة فأُظهرت الشاشة
+    document.getElementById("hiddenScreen").classList.remove("off");
+    document.dispatchEvent(new CustomEvent("time:screen", { detail: { id: "hidden" } }));
+    setTimeout(function () {
+      var w2 = document.getElementById("c3").width;
+      ok("فتح الشاشة من القائمة يُعيد ضبط حجم المخطط تلقائياً", w2 > w1 && w2 >= 600,
+        "قبل=" + w1 + "px | بعد=" + w2 + "px");
+      var rows = document.querySelectorAll(".legend .lg-row").length;
+      ok("المفتاح (legend) بُني من البيانات في كل بطاقات المخططات", rows >= 6, "صفوف المفاتيح=" + rows);
+      document.getElementById("out").textContent = log.join("\n") + "\n--END--";
+    }, 400);
+  }, 60);
+})();
+</script>
+</body>
+</html>

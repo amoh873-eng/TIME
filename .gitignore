@@ -5,10 +5,29 @@ out/
 obj/
 bin/
 .dot/
+*.user
+*.suo
 
-# ===== Runtime data =====
-data/tasks.json
-data/*.json
+# ===== Runtime state (يُعاد إنشاؤه تلقائياً عند أول حفظ) =====
+direct-source.json
+punch-analysis.json
+*.tmp
+
+# ===== Runtime data / generated artifacts =====
+# كل ما يُولَّد داخل data/ (تصديرات Excel، تفريغات SQL، لقطات DOM، تقارير فحص) لا يُرفع للمستودع،
+# ويُستثنى من ذلك أدوات التحقق الآلي الموثّقة في README حتى تبقى نسخة منها في المستودع.
+data/*
+!data/.gitkeep
+!data/verify_approval_rule.ps1
+!data/verify_dashboard.ps1
+!data/verify_maintenance.ps1
+!data/verify_restore.ps1
+!data/check-active.mjs
+!data/check-html-js.mjs
+!data/check-render.mjs
+!data/check-selftest.mjs
+!data/check_page.ps1
+!data/inspect_118c.ps1
 
 # ===== IDE / editor =====
 .idea/

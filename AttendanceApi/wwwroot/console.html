@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Attendance API — لوحة المطوّرين (اختبار نقاط النهاية)</title>
+<style>
+  :root{--panel:#1e293b;--panel2:#273449;--txt:#e2e8f0;--muted:#94a3b8;
+        --get:#22c55e;--post:#3b82f6;--line:#334155;--accent:#38bdf8}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0f172a,#111c34);color:var(--txt);
+       font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.6}
+  header{padding:22px;border-bottom:1px solid var(--line);background:rgba(15,23,42,.9);
+         position:sticky;top:0;z-index:5}
+  h1{margin:0;font-size:21px}
+  .sub{color:var(--muted);font-size:13px;margin-top:4px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+        border:1px solid var(--line);background:var(--panel);font-size:13px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#64748b}
+  .dot.up{background:var(--get);box-shadow:0 0 10px var(--get)}
+  .dot.down{background:#ef4444}
+  main{padding:20px;max-width:1100px;margin:0 auto}
+  .grid{display:grid;gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .card>h2{margin:0;padding:13px 16px;font-size:16px;background:var(--panel2);
+           border-bottom:1px solid var(--line)}
+  .ep{padding:14px 16px;border-bottom:1px dashed var(--line)}
+  .ep:last-child{border-bottom:0}
+  .row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+  .m{font-weight:700;font-size:11px;letter-spacing:.5px;padding:3px 9px;border-radius:6px;color:#06121f}
+  .m.get{background:var(--get)}.m.post{background:var(--post)}.m.delete{background:#f87171}
+  code.path{background:#0b1220;border:1px solid var(--line);padding:3px 9px;border-radius:6px;
+            font-size:13px;color:var(--accent);direction:ltr;display:inline-block}
+  .desc{color:var(--muted);font-size:13px;margin-top:6px}
+  .params{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;align-items:center}
+  input{background:#0b1220;border:1px solid var(--line);color:var(--txt);border-radius:8px;
+        padding:6px 10px;font-size:13px;min-width:130px}
+  button{cursor:pointer;border:0;border-radius:8px;padding:7px 18px;font-size:13px;font-weight:600;
+         background:var(--accent);color:#06121f;margin-top:10px}
+  button:hover{filter:brightness(1.1)}button:disabled{opacity:.6;cursor:progress}
+  pre{margin:10px 0 0;background:#0b1220;border:1px solid var(--line);border-radius:10px;padding:12px;
+      overflow:auto;max-height:340px;direction:ltr;text-align:left;font-size:12.5px;
+      white-space:pre-wrap;word-break:break-word}
+  .ok{color:var(--get);font-weight:700}.bad{color:#f87171;font-weight:700}
+  a{color:var(--accent)}
+  footer{color:var(--muted);text-align:center;padding:26px;font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <div class="row" style="justify-content:space-between">
+    <div>
+      <h1>Attendance API — لوحة المطوّرين</h1>
+      <div class="sub">خدمة الحضور والإجازات — <span id="base"></span> —
+        <a href="/index.html">تقارير المغادرات والإجازات (Excel)</a> —
+        <a href="/punch.html">الحضور والانصراف (قائمة جديدة)</a> —
+        <a href="/openapi/v1.json" target="_blank">وثيقة OpenAPI (JSON)</a></div>
+    </div>
+    <span class="pill"><span id="dot" class="dot"></span><span id="statusTxt">جارٍ الفحص…</span></span>
+  </div>
+</header>
+<main><div class="grid" id="grid"></div></main>
+<footer>AttendanceApi — ASP.NET Core — واجهة محلية تعمل دون إنترنت</footer>
+<script>
+const API=[
+ {group:"الحضور والمراجعة",items:[
+  {m:"GET",path:"/api/v1/attendance/audit-status",desc:"حالة آخر دورة مراجعة: هل تعمل الآن؟ عدد السجلات؟ آخر خطأ؟"},
+  {m:"POST",path:"/api/v1/attendance/audit-engine",desc:"تشغيل محرك المراجعة في الخلفية (غير متزامن).",
+   params:[{n:"year",t:"number",p:"السنة"},{n:"month",t:"number",p:"الشهر 1-12"},{n:"employeeId",t:"number",p:"رقم الموظف"}]},
+  {m:"POST",path:"/api/v1/attendance/upload-bulk",desc:"رفع جماعي لملف حضور (.xlsx/.csv) إلى جدول المرحلة — يتطلب قاعدة بيانات.",
+   params:[{n:"stagingTable",t:"text",p:"جدول المرحلة"}],file:true}]},
+ {group:"مراجعة تقرير المغادرات (ملف Excel)",items:[
+  {m:"POST",path:"/api/v1/departures/import",desc:"رفع ملف «تقرير المغادرات» (.xlsx) بترويساته العربية وتحويله إلى جدول المرحلة.",
+   params:[{n:"replace",t:"text",p:"replace=true"}],file:true},
+  {m:"POST",path:"/api/v1/departures/review",desc:"تشغيل المراجعة: المادة 118/ب (استئذان يتجاوز 4 ساعات) + المادة 118/ج (تجميع التأخير أسبوعياً) + قاعدة المكافأة (حد الـ 15 يوماً)."},
+  {m:"GET",path:"/api/v1/departures/staging-summary",desc:"ملخص جدول المرحلة: استئذان/سنوية/مرضية/مهام رسمية/أخرى."},
+  {m:"GET",path:"/api/v1/departures/review-results",desc:"نتائج المراجعة الشهرية لكل موظف (مع الفلترة على المخالفات).",
+   params:[{n:"page",t:"number",p:"الصفحة"},{n:"pageSize",t:"number",p:"حجم الصفحة"},{n:"onlyViolations",t:"text",p:"onlyViolations=true"},{n:"year",t:"number",p:"السنة"},{n:"month",t:"number",p:"الشهر"},{n:"jobNumber",t:"text",p:"الرقم الوظيفي"}]},
+  {m:"GET",path:"/api/v1/departures/over-4-hours",desc:"الطلبات التي تجاوزت 4 ساعات (مخالفات المادة 118/ب).",
+   params:[{n:"take",t:"number",p:"عدد الصفوف"}]},
+  {m:"GET",path:"/api/v1/departures/weekly-late",desc:"التجميع الأسبوعي لدقائق التأخير/الانصراف المبكر داخل الدوام (08:30–15:30) — 60 دقيقة أسبوعياً = خصم يوم كامل (المادة 118/ج).",
+   params:[{n:"onlyViolations",t:"text",p:"onlyViolations=true"},{n:"jobNumber",t:"text",p:"الرقم الوظيفي"},{n:"take",t:"number",p:"عدد الصفوف"}]},
+  {m:"GET",path:"/api/v1/departures/compliance-by-administration",desc:"لوحة التزام الإدارات/المديريات بالقوانين: نسبة الموظفين الملتزمين (بلا أي مخالفة) لكل إدارة، مرتّبة تصاعدياً بالمخالفات (الأكثر التزاماً أولاً) مع أيام 118/ب و118/ج.",params:[{n:"byMainDepartment",t:"text",p:"byMainDepartment=true"},{n:"minEmployees",t:"number",p:"أدنى عدد موظفين"}]},
+  {m:"GET",path:"/api/v1/departures/review-summary",desc:"ملخص النتائج المحفوظة في قاعدة البيانات (جدول المرحلة + المراجعة + التجميع الأسبوعي) — لعرض اللوحة مباشرة بلا رفع ملف."},
+  {m:"GET",path:"/api/v1/departures/export-excel",desc:"تنزيل ملف Excel بنتائج المراجعة (ملخص + التزام الإدارات + مخالفات 118/ب + مخالفات 118/ج الأسبوعية + التفصيل).",download:true},
+  {m:"GET",path:"/api/v1/departures/export-legal-reports",desc:"تنزيل «التقارير القانونية الاحترافية» (10 أوراق): تقرير مستقل لكل قاعدة — المتأخرون 60 دقيقة (118/ج)، الاستئذان فوق 4 ساعات (118/ب)، التأخير الصباحي المتكرر (المادة 7)، خصم المكافأة (تجاوز 15 يوماً)، الإجازات المرضية (المادة 112)، رصيد الإجازة السنوية، مع ملخص تنفيذي ودليل قواعد وكشف خصومات مُجمَّع ومنهجية الاحتساب.",download:true}]},
+ {group:"بصمات الحضور والانصراف — المراجعة القانونية",items:[
+  {m:"POST",path:"/api/v1/punch/import",desc:"رفع ملف «تقرير الحضور والانصراف» الخام (.xlsx) بترويساته العربية (الرقم الوظيفي، الإسم، التاريخ، حالة التحضير، توقيت الحضور، مكان الحضور، توقيت الإنصراف، الإدارة) إلى جدول المرحلة StagingPunchRecords.",
+    params:[{n:"replace",t:"text",p:"replace=true",d:"استبدال بيانات المرحلة السابقة"}]},
+  {m:"POST",path:"/api/v1/punch/analyze",desc:"تشغيل التحليل القانوني للبصمات: التأخير الصباحي والانصراف المبكر والمغادرة أثناء الدوام، ثم المادة 7 (شهرياً) والمادة 118/ب (> 4 ساعات) والمادة 118/ج (60 دقيقة أسبوعياً) وقاعدة المكافأة (15 يوماً) — وتخزين النتائج اليومية والأسبوعية والشهرية.",
+    params:[{n:"graceMinutes",t:"number",p:"graceMinutes=15",d:"حدّ السماح الصباحي بالدقائق"}]},
+  {m:"GET",path:"/api/v1/punch/staging-summary",desc:"ملخص جدول المرحلة: عدد الصفوف والموظفين والفترة وتوزيع حالات التحضير كما وردت في الملف (جودة البيانات)."},
+  {m:"GET",path:"/api/v1/punch/summary",desc:"ملخص نتائج التحليل: أيام العمل والغياب وعدم اكتمال البصمة، دقائق التأخير والانصراف المبكر والمغادرة، أيام المادة 7 و118/ب و118/ج، أيام حسم الراتب، وخصم المكافأة."},
+  {m:"GET",path:"/api/v1/punch/daily",desc:"النتائج اليومية لكل موظف (تأخير/انصراف مبكر/مغادرة أثناء الدوام/غياب/بلا انصراف).",
+    params:[{n:"onlyViolations",t:"text",p:"onlyViolations=true"},{n:"jobNumber",t:"text",p:"jobNumber="},{n:"page",t:"number",p:"page=1"},{n:"pageSize",t:"number",p:"pageSize=50"}]},
+  {m:"GET",path:"/api/v1/punch/weekly",desc:"التجميع الأسبوعي لدقائق التأخير والانصراف المبكر والمغادرة (المادة 118/ج) — أسبوع العمل الأحد إلى الخميس.",
+    params:[{n:"onlyViolations",t:"text",p:"onlyViolations=true"},{n:"jobNumber",t:"text",p:"jobNumber="}]},
+  {m:"GET",path:"/api/v1/punch/monthly",desc:"النتيجة الشهرية لكل موظف: عقوبات المادة 7، الغياب، الإجازات، أيام 118/ب و118/ج، وأهلية خصم المكافأة.",
+    params:[{n:"onlyViolations",t:"text",p:"onlyViolations=true"},{n:"year",t:"number",p:"year="},{n:"month",t:"number",p:"month="}]},
+  {m:"GET",path:"/api/v1/punch/compliance-by-department",desc:"لوحة التزام الإدارات والمديريات من بصمات الحضور: نسبة الملتزمين وأيام 118/ب و118/ج والغياب.",
+    params:[{n:"minEmployees",t:"number",p:"minEmployees=1"}]},
+  {m:"GET",path:"/api/v1/punch/employees/{jobNumber}/timeline",desc:"سجل أيام موظف واحد كاملاً من نتائج التحليل (للمراجعة الفردية).",
+    params:[{n:"jobNumber",t:"text",p:"jobNumber="},{n:"from",t:"text",p:"from=2023-08-01"},{n:"to",t:"text",p:"to=2024-01-11"}]},
+  {m:"GET",path:"/api/v1/punch/export-legal-reports",desc:"تنزيل التقارير القانونية من البصمات (16 ورقة): الملخص التنفيذي، دليل القواعد، المادة 7، المخالفات اليومية، 118/ج، 118/ب، الغياب غير المبرّر، نقص بصمة الانصراف، رصيد الإجازة السنوية، خصم المكافأة، المادة 112، التزام الإدارات، كشف الخصومات المُجمَّع، تقويم العطل الرسمية والدينية، الدوام في العطل ونهاية الأسبوع، والمنهجية وجودة البيانات.",download:true},
+  {m:"GET",path:"/api/v1/punch/reports",desc:"«قائمة تقارير الحضور والانصراف» (قائمة جديدة مستقلة): كتالوج تقارير Excel لكل قاعدة/مؤشر مع عدد الصفوف المتوفرة في كل تقرير."},
+  {m:"GET",path:"/api/v1/punch/reports/{key}/preview",desc:"معاينة أول صفوف أي تقرير من قائمة تقارير الحضور والانصراف (كشف الحضور اليومي، التأخير، الانصراف المبكر، المغادرة، 118/ب، 118/ج، الغياب، نقص البصمة، الدوام في العطل، تقويم العطل، الملخص الشهري، الإجازات، التزام الإدارات).",
+   params:[{n:"key",t:"text",p:"daily-attendance"},{n:"pageSize",t:"number",p:"pageSize=15"},{n:"from",t:"text",p:"from=2023-08-01"},{n:"to",t:"text",p:"to=2024-01-11"},{n:"jobNumber",t:"text",p:"jobNumber="}]},
+  {m:"GET",path:"/api/v1/punch/reports/{key}/export",desc:"تنزيل تقرير Excel مستقل من قائمة تقارير الحضور والانصراف (مع مرشّحات الفترة والرقم الوظيفي وسقف الصفوف — 0 يعني الكل).",download:true,
+   params:[{n:"key",t:"text",p:"daily-attendance"},{n:"from",t:"text",p:"from="},{n:"to",t:"text",p:"to="},{n:"jobNumber",t:"text",p:"jobNumber="},{n:"maxRows",t:"number",p:"maxRows=0"}]},
+  {m:"GET",path:"/api/v1/punch/calendar",desc:"تقويم العطل المعتمد: العطل الرسمية والدينية (الكتالوج المدمج + جدول OfficialHolidays) مع عدد الموظفين الذين دوّموا فيها ودقائق العمل."},
+  {m:"GET",path:"/api/v1/punch/calendar/export",desc:"تنزيل تقويم العطل الرسمية والدينية (Excel).",download:true,
+   params:[{n:"from",t:"text",p:"from="},{n:"to",t:"text",p:"to="}]},
+  {m:"POST",path:"/api/v1/punch/calendar/holidays",desc:"إضافة أو تعديل عطلة — JSON: { date: \"2024-12-25\", name: \"عيد الميلاد المجيد\", kind: 3 } — النوع: 1 رسمية | 2 دينية إسلامية | 3 دينية مسيحية | 4 مناسبة وطنية."},
+  {m:"POST",path:"/api/v1/punch/calendar/holidays/bulk",desc:"إضافة قائمة عطل نصية — JSON: { text: \"2025-01-01 | رأس السنة الميلادية | رسمية\" } — سطر لكل عطلة: التاريخ | الاسم | النوع."},
+  {m:"POST",path:"/api/v1/punch/calendar/holidays/import",desc:"استيراد تقويم العطل من ملف Excel (أعمدة: التاريخ، الاسم/المناسبة، النوع).",file:true},
+  {m:"DELETE",path:"/api/v1/punch/calendar/holidays/{date}",desc:"استبعاد عطلة: حذف عطلة مسجّلة، أو تسجيل «استبعاد» لعطلة من كتالوج النظام (يمكن استعادتها بزر كتالوج النظام).",
+   params:[{n:"date",t:"text",p:"2023-09-27"}]},
+  {m:"POST",path:"/api/v1/punch/calendar/holidays/defaults",desc:"استعادة كتالوج العطل المدمج (الأردن 2023 — 2025) إلى قاعدة البيانات (لسنة محدّدة أو للكل).",
+   params:[{n:"year",t:"number",p:"year="}]}]},
+ {group:"التقارير (تتطلب قاعدة بيانات متصلة)",items:[
+  {m:"GET",path:"/api/v1/reports/low-leave-balance",desc:"تقرير انخفاض رصيد الإجازة السنوية."},
+  {m:"GET",path:"/api/v1/reports/monthly-attendance-percentage",desc:"نسبة الحضور الشهري."},
+  {m:"GET",path:"/api/v1/reports/weekly-lateness",desc:"مخالفات التأخير الأسبوعي (المادة 118/ج)."},
+  {m:"GET",path:"/api/v1/reports/disciplinary-penalties",desc:"العقوبات التأديبية الشهرية (المادة 7)."},
+  {m:"GET",path:"/api/v1/reports/monthly-bonus-evaluation",desc:"أهلية المكافأة الشهرية (قاعدة الـ 15 يوماً)."},
+  {m:"GET",path:"/api/v1/reports/annual-sick-leave-report",desc:"تقرير الإجازات المرضية السنوي."},
+  {m:"GET",path:"/api/v1/reports/overtime",desc:"تقرير العمل الإضافي."},
+  {m:"GET",path:"/api/v1/reports/export-excel",desc:"تنزيل جميع التقارير في ملف Excel واحد.",download:true}]},
+ {group:"الإجازات",items:[
+  {m:"POST",path:"/api/v1/leave/rollover",desc:"الترحيل السنوي لأرصدة الإجازات (sp_process_year_end_rollover).",
+   params:[{n:"fromYear",t:"number",p:"السنة المصدر"}]}]},
+ {group:"الإعدادات — الربط المباشر بقاعدة البيانات",items:[
+  {m:"GET",path:"/api/v1/settings/direct-source",desc:"قراءة إعدادات الربط المباشر (بلا كلمة المرور) + حالة آخر مزامنة + مسار ملف الإعدادات."},
+  {m:"PUT",path:"/api/v1/settings/direct-source",desc:"حفظ الإعدادات: enabled/mode(app|ext)/server/database/auth/userId/password/connectionString/query/maxRows/replaceExisting/autoSyncOnLoad/autoSyncMinutes/sourceLabel."},
+  {m:"POST",path:"/api/v1/settings/direct-source/test",desc:"اختبار الاتصال بالمصدر وعرض إصدار الخادم وقاعدة البيانات والمستخدم."},
+  {m:"POST",path:"/api/v1/settings/direct-source/preview",desc:"معاينة أول صفوف المصدر للتأكد من الأعمدة قبل المزامنة.",
+   params:[{n:"take",t:"number",p:"عدد صفوف المعاينة (20)"}]},
+  {m:"POST",path:"/api/v1/settings/direct-source/sync",desc:"مزامنة الآن: قراءة المصدر ← استيراد جدول المرحلة ← المراجعة القانونية ← ملخص اللوحة."},
+  {m:"POST",path:"/api/v1/settings/direct-source/disable",desc:"تعطيل الربط المباشر (تبقى بيانات الاتصال محفوظة)."},
+  {m:"GET",path:"/api/v1/settings/direct-source/default-query",desc:"استعلام المصدر الافتراضي (نموذج يعدّله المشغّل)."}]},
+ {group:"الصيانة — تنظيف البيانات لاستقبال بيانات جديدة",items:[
+  {m:"GET",path:"/api/v1/maintenance/data-status",desc:"حالة البيانات الحالية: مجموعات الجداول وعدد صفوف كل جدول وإجماليات كل نطاق (data / all) وحالة بصمة آخر تحليل — تُستخدم لعرض ما سيُحذف قبل التنفيذ."},
+  {m:"POST",path:"/api/v1/maintenance/reset",desc:"تنظيف البيانات — JSON: { scope: \"data\" | \"all\", confirm: \"حذف\", resetWeeklyRule: false }. «data» يُفرّغ جداول التشغيل والتحليل ويُبقي البيانات المرجعية والإعدادات، و«all» مسح شامل — يتطلب تأكيداً نصّياً، ويرفض التنفيذ أثناء دورة مراجعة قيد التشغيل."}]}
+];
+const grid=document.getElementById("grid");
+document.getElementById("base").textContent=location.origin;
+const pid=(gi,ei,pn)=>"p-"+gi+"-"+ei+"-"+pn;
+API.forEach((g,gi)=>{
+  const card=document.createElement("section");card.className="card";
+  const h=document.createElement("h2");h.textContent=g.group;card.appendChild(h);
+  g.items.forEach((ep,ei)=>{
+    const wrap=document.createElement("div");wrap.className="ep";
+    const row=document.createElement("div");row.className="row";
+    const b=document.createElement("span");b.className="m "+ep.m.toLowerCase();b.textContent=ep.m;
+    const c=document.createElement("code");c.className="path";c.textContent=ep.path;
+    row.append(b,c);wrap.appendChild(row);
+    if(ep.params){
+      const ps=document.createElement("div");ps.className="params";
+      ep.params.forEach(p=>{const i=document.createElement("input");
+        i.type=p.t;i.placeholder=p.p;i.id=pid(gi,ei,p.n);i.title=p.n;ps.appendChild(i);});
+      wrap.appendChild(ps);
+    }
+    if(ep.file){
+      const fs=document.createElement("div");fs.className="params";
+      const f=document.createElement("input");f.type="file";f.id=pid(gi,ei,"file");fs.appendChild(f);
+      wrap.appendChild(fs);
+    }
+    const d=document.createElement("div");d.className="desc";d.textContent=ep.desc||"";
+    wrap.appendChild(d);
+    const btn=document.createElement("button");
+    btn.textContent=ep.download?"تنزيل الملف":"تنفيذ";
+    const out=document.createElement("pre");out.style.display="none";
+    btn.addEventListener("click",()=>run(ep,gi,ei,btn,out));
+    wrap.append(btn,out);card.appendChild(wrap);
+  });
+  grid.appendChild(card);
+});
+async function run(ep,gi,ei,btn,out){
+  const url=new URL(ep.path,location.origin);
+  (ep.params||[]).forEach(p=>{const el=document.getElementById(pid(gi,ei,p.n));
+    if(el&&el.value!=="")url.searchParams.set(p.n,el.value);});
+  if(ep.download){location.href=url.toString();return;}
+  btn.disabled=true;out.style.display="block";out.textContent="جارٍ التنفيذ…";
+  const t0=performance.now();
+  try{
+    const opts={method:ep.m};
+    if(ep.m!=="GET"){
+      if(ep.file){
+        const fi=document.getElementById(pid(gi,ei,"file"));
+        if(!fi||!fi.files.length){out.textContent="الرجاء اختيار ملف أولاً.";return;}
+        const fd=new FormData();fd.append("file",fi.files[0]);opts.body=fd;
+      }else{opts.headers={"Content-Type":"application/json"};opts.body="{}";}
+    }
+    const r=await fetch(url.toString(),opts);
+    const ms=Math.round(performance.now()-t0);
+    const raw=await r.text();
+    let body=raw;try{body=JSON.stringify(JSON.parse(raw),null,2);}catch(_){}
+    out.innerHTML="";
+    const head=document.createElement("span");
+    head.className=r.ok?"ok":"bad";
+    head.textContent="HTTP "+r.status+" "+r.statusText+" — "+ms+" ms";
+    out.append(head,document.createTextNode("\n\n"),body||"(استجابة فارغة)");
+  }catch(err){out.textContent="فشل الاتصال: "+err.message;}
+  finally{btn.disabled=false;}
+}
+async function poll(){
+  const dot=document.getElementById("dot"),txt=document.getElementById("statusTxt");
+  try{const r=await fetch("/api/v1/attendance/audit-status",{cache:"no-store"});
+    const j=await r.json();
+    dot.className="dot up";
+    txt.textContent=j.isRunning?"الخدمة متصلة — المراجعة تعمل":"الخدمة متصلة";
+  }catch(_){dot.className="dot down";txt.textContent="تعذّر الاتصال بالخدمة";}
+}
+poll();setInterval(poll,10000);
+</script>
+</body>
+</html>

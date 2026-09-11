@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>مراجعة تقرير المغادرات — ارفع ملفاً واستلم تقرير Excel</title>
+<style>
+  :root{--panel:#1e293b;--panel2:#273449;--txt:#e2e8f0;--muted:#94a3b8;--line:#334155;
+        --accent:#38bdf8;--ok:#22c55e;--bad:#f87171;--warn:#fbbf24;--bg:#0b1220;--dim:#0f172a}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0f172a,#111c34 60%,#0d1729);color:var(--txt);
+       font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.65}
+  header{padding:20px 22px;border-bottom:1px solid var(--line);background:rgba(15,23,42,.92);
+         position:sticky;top:0;z-index:9;display:flex;flex-wrap:wrap;gap:12px;
+         justify-content:space-between;align-items:center}
+  h1{margin:0;font-size:20px}
+  .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+        border:1px solid var(--line);background:var(--panel);font-size:13px;white-space:nowrap}
+  .dot{width:9px;height:9px;border-radius:50%;background:#64748b}
+  .dot.up{background:var(--ok);box-shadow:0 0 10px var(--ok)}
+  .dot.down{background:#ef4444}
+  main{padding:22px 16px 8px;max-width:1080px;margin:0 auto;display:grid;gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+        box-shadow:0 10px 30px rgba(2,6,23,.35)}
+  .card>h2{margin:0;padding:14px 18px;font-size:16px;background:var(--panel2);
+           border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+       border-radius:50%;background:var(--accent);color:#06121f;font-size:14px;font-weight:800}
+  .pad{padding:18px}
+  .drop{border:2px dashed #475569;border-radius:14px;padding:30px 18px;text-align:center;
+        cursor:pointer;background:#0f1a2e;transition:.18s}
+  .drop:hover,.drop.over{border-color:var(--accent);background:#132441}
+  .drop-ico{font-size:34px}
+  .drop-t{font-weight:700;margin-top:6px}
+  .drop-s{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .picked{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px;padding:11px 14px;
+          border:1px solid var(--line);border-radius:12px;background:#132441}
+  .fname{font-weight:700;word-break:break-all}
+  .fsize{color:var(--muted);font-size:12.5px}
+  .ghost{margin-inline-start:auto;background:transparent;color:var(--txt);border:1px solid var(--line);
+         border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer}
+  .ghost:hover{border-color:var(--accent);color:var(--accent)}
+  details.opts{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+  details.opts summary{cursor:pointer;color:var(--muted);font-size:13px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-top:8px}
+  button.primary{cursor:pointer;border:0;border-radius:10px;padding:12px 30px;font-size:15px;
+                 font-weight:700;background:var(--accent);color:#06121f;transition:.15s}
+  button.primary:hover{filter:brightness(1.08)}
+  button.primary:disabled{opacity:.55;cursor:not-allowed}
+  button.big{font-size:16px;padding:14px 40px}
+  .steps{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px}
+  .steps li{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+            border-radius:10px;background:#0f1a2e;font-size:13.5px}
+  .steps li b{font-weight:700}
+  .steps li i{margin-inline-start:auto;color:var(--muted);font-style:normal;font-size:12.5px}
+  .sd{width:10px;height:10px;border-radius:50%;background:#475569;flex:0 0 auto}
+  .steps li.run{border-color:var(--accent);background:#132441}
+  .steps li.run .sd{background:var(--accent);animation:pulse 1s infinite}
+  .steps li.done .sd{background:var(--ok)}
+  .steps li.fail{border-color:#7f1d1d;background:#2a1115}
+  .steps li.fail .sd{background:#ef4444}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .err{margin-top:14px;padding:12px 14px;border:1px solid #7f1d1d;background:#2a1115;border-radius:10px;
+       color:#fecaca;font-size:13.5px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px}
+  .kpi{border:1px solid var(--line);border-radius:13px;padding:13px 15px;background:#0f1a2e}
+  .kpi .v{font-size:25px;font-weight:800;line-height:1.25}
+  .kpi .l{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .kpi .n{color:#64748b;font-size:11.5px;margin-top:4px}
+  .kpi.ok .v{color:var(--ok)}.kpi.warn .v{color:var(--warn)}.kpi.bad .v{color:var(--bad)}
+  .kpi.info .v{color:var(--accent)}
+  .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px;
+        padding-top:16px;border-top:1px dashed var(--line)}
+  .acts .ghost{margin-inline-start:0}
+  .meta{color:var(--muted);font-size:12.5px}
+  .sheets{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;margin-top:14px}
+  .sheet{border:1px solid var(--line);border-radius:11px;padding:10px 13px;background:#132441;font-size:13px}
+  .sheet b{display:block;font-size:13.5px}
+  .sheet span{color:var(--muted);font-size:12px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px}
+  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+  th{color:var(--muted);font-weight:600;font-size:12.5px}
+  tbody tr:nth-child(even){background:#0f1a2e}
+  td.n{font-variant-numeric:tabular-nums;font-weight:700;width:120px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .tag.skip{border-color:#78350f;color:var(--warn)}
+  details{border-top:1px dashed var(--line);margin-top:16px;padding-top:12px}
+  summary{cursor:pointer;font-size:13.5px}
+  pre{margin:10px 0 0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;
+      overflow:auto;max-height:320px;direction:ltr;text-align:left;font-size:12px;white-space:pre-wrap}
+  /* ---- لوحة التزام الإدارات + المخطط الدائري ثلاثي الأبعاد ---- */
+  .cmpctl{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;margin-bottom:14px}
+  .cmpctl label{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+  .cmpctl select{background:#0b1220;border:1px solid var(--line);color:var(--txt);border-radius:8px;
+                 padding:6px 10px;font-size:13px;min-width:158px}
+  .cmpsplit{display:grid;grid-template-columns:minmax(280px,430px) 1fr;gap:16px;align-items:start}
+  @media (max-width:880px){.cmpsplit{grid-template-columns:1fr}}
+  .chartbox{position:relative;border:1px solid var(--line);border-radius:14px;padding:10px 10px 6px;
+            background:radial-gradient(125% 95% at 50% 0%,#182842,#0f1a2e 72%)}
+  #pie{width:100%;height:320px;display:block;cursor:default}
+  #tip{position:absolute;pointer-events:none;background:rgba(6,13,24,.95);border:1px solid var(--line);
+       border-radius:9px;padding:7px 10px;font-size:12.5px;display:none;z-index:6;max-width:240px;
+       box-shadow:0 10px 24px rgba(2,6,23,.6)}
+  #tip b{display:block;font-size:13px;margin-bottom:3px;color:#f8fafc}
+  .ramp{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--muted);margin-top:6px}
+  .ramp i{height:9px;flex:1;border-radius:6px;
+          background:linear-gradient(90deg,#b91c1c,#ea580c,#f59e0b,#eab308,#4ade80,#22c55e)}
+  .cmpnote{color:var(--muted);font-size:12px;margin-top:8px}
+  .cmptbl-wrap{max-height:342px;overflow:auto;border:1px solid var(--line);border-radius:12px}
+  .cmptbl{margin:0;font-size:12.5px}
+  .cmptbl thead th{position:sticky;top:0;background:var(--panel2);z-index:1}
+  .cmptbl tbody tr.off{opacity:.62}
+  .cmptbl tbody tr.hl{background:#1d3153}
+  .cmptbl td.c{white-space:nowrap}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-inline-end:7px;
+      vertical-align:-1px;box-shadow:inset 0 0 0 1px rgba(15,23,42,.7)}
+  .bar{display:inline-block;width:62px;height:7px;border-radius:5px;background:#0b1220;
+       border:1px solid var(--line);overflow:hidden;vertical-align:middle;margin-inline-end:6px}
+  .bar>i{display:block;height:100%}
+  footer{color:var(--muted);text-align:center;padding:24px;font-size:12.5px}
+  footer a{color:var(--accent);text-decoration:none;margin:0 8px}
+  @media (max-width:620px){.pad{padding:14px}.kpi .v{font-size:22px}}
+  /* ---- زر الإعدادات + نافذة الربط المباشر بقاعدة البيانات ---- */
+  .hgroup{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  button.gear{display:inline-flex;align-items:center;gap:7px;font-weight:700;padding:8px 15px}
+  .pill.live{border-color:#15803d;background:#0d2018;color:#bbf7d0}
+  .mode-note{margin-top:12px;padding:10px 13px;border:1px solid #14532d;background:#0d2018;border-radius:11px;
+             color:#bbf7d0;font-size:12.5px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .mode-note.off{border-color:var(--line);background:#0f1a2e;color:var(--muted)}
+  .mode-note button{font-size:12.5px;padding:5px 12px}
+  .modal{position:fixed;inset:0;background:rgba(2,6,23,.74);backdrop-filter:blur(3px);z-index:30;
+         display:flex;align-items:center;justify-content:center;padding:16px}
+  .msheet{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:100%;max-width:920px;
+          max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(2,6,23,.6)}
+  .mhead{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;
+         padding:14px 18px;background:var(--panel2);border-bottom:1px solid var(--line)}
+  .mhead h2{margin:0;font-size:16px}
+  .mpad{padding:16px 18px 22px;display:grid;gap:14px}
+  .msec{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#0f1a2e;display:grid;gap:10px}
+  .msec>h3{margin:0;font-size:13.5px;color:var(--accent)}
+  .mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:10px}
+  .mfield{display:grid;gap:4px;font-size:12px;color:var(--muted)}
+  .mfield input,.mfield select,.mfield textarea{background:#0b1220;border:1px solid var(--line);color:var(--txt);
+        border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;width:100%}
+  .mfield textarea{direction:ltr;text-align:left;min-height:118px;white-space:pre;font-family:Consolas,monospace}
+  .mfield.wide{grid-column:1/-1}
+  .switchline{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:13px;cursor:pointer;
+              border:1px solid var(--line);border-radius:12px;padding:11px 13px;background:#132441}
+  .switchline span{color:var(--muted);font-size:12px;flex-basis:100%}
+  .inrow{display:flex;flex-wrap:wrap;gap:16px;font-size:12.5px;color:var(--muted)}
+  .inrow label{display:flex;align-items:center;gap:7px}
+  .mbtns{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .mbtns .ghost{margin-inline-start:0}
+  .dsmsg{padding:10px 13px;border-radius:10px;font-size:13px;border:1px solid var(--line);background:#0f1a2e}
+  .dsmsg.ok{border-color:#14532d;background:#0d2018;color:#bbf7d0}
+  .dsmsg.bad{border-color:#7f1d1d;background:#2a1115;color:#fecaca}
+  .dsstate{color:var(--muted);font-size:12px;line-height:1.9}
+  .dsstate b{color:#c7d2fe}
+  .prev-wrap{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+  .prev{margin:0;font-size:11.5px;white-space:nowrap}
+  .prev th,.prev td{padding:5px 8px}
+  .prev thead th{position:sticky;top:0;background:var(--panel2);z-index:1}
+  .hid{display:none!important}
+  /* ضمان إخفاء كل عنصر عليه خاصية hidden حتى لو فرضت قاعدته display (مثل .modal و .picked) */
+  [hidden]{display:none!important}
+  /* ---- قائمة التنقل الرئيسية: تقارير المغادرات (هذه الصفحة) + الحضور والانصراف (قائمة جديدة) ---- */
+  .topnav{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px 22px;
+          background:rgba(9,15,28,.92);border-bottom:1px solid var(--line)}
+  .topnav a{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;
+            border:1px solid var(--line);background:var(--panel);color:var(--txt);
+            text-decoration:none;font-size:13px;transition:.15s}
+  .topnav a:hover{border-color:var(--accent);color:var(--accent)}
+  .topnav a.active{background:var(--accent);color:#06121f;border-color:var(--accent);font-weight:700}
+  .topnav .navhint{margin-inline-start:auto;color:var(--muted);font-size:12px}
+</style>
+<link rel="stylesheet" href="/assets/shell.css?v=1" />
+</head>
+<body>
+<aside class="rail" id="rail" aria-label="القائمة الرئيسية"></aside>
+<div class="scrim" id="scrim"></div>
+<div class="shell-body">
+<header class="topbar">
+  <button class="iconbtn burger" id="burger" type="button" aria-label="إظهار القائمة">☰</button>
+  <div class="tb-title">
+    <div class="tt" id="tbTitle">لوحة مؤشرات المغادرات والإجازات</div>
+    <div class="ts" id="tbSub">مراجعة تقرير المغادرات: الاستيراد ← المراجعة القانونية ← تقرير Excel</div>
+  </div>
+  <div class="crumb" id="crumb"></div>
+  <div class="tb-tools">
+    <button class="iconbtn danger" id="tbCleanup" type="button" title="تنظيف كافة البيانات الحالية لاستقبال بيانات جديدة">🧹 تنظيف البيانات</button>
+    <span class="clock" id="clock"></span>
+    <span class="pill" id="modePill" title="مصدر النتائج الحالي"><span class="dot" id="modeDot"></span><span id="modeTxt">الوضع: ملف Excel</span></span>
+    <span class="pill" title="حالة الاتصال بالخدمة"><span id="dot" class="dot"></span><span id="statusTxt">جارٍ الفحص…</span></span>
+    <button class="iconbtn" id="gear" type="button" title="الإعدادات — تفعيل الربط المباشر بقاعدة البيانات">⚙️ الإعدادات</button>
+  </div>
+</header>
+
+<main class="shell-main">
+  <!-- ============== شاشة 0: اللوحة المركزية للمغادرات والإجازات ============== -->
+  <section class="screen" data-screen="home">
+
+    <div class="hero">
+      <h2>لوحة مؤشرات المغادرات والإجازات</h2>
+      <div class="hs">من ملف واحد إلى تقرير Excel واحد: استيراد تقرير المغادرات ← المراجعة القانونية (المادتان 118/ب و118/ج وقاعدة الـ 15 يوماً للمكافأة) ← إصدار التقارير.
+        استخدم القائمة الجانبية أو <span class="kbd">Ctrl</span> + <span class="kbd">K</span> للتنقل السريع بين الشاشات.</div>
+      <div class="hrow">
+        <button class="iconbtn primary" type="button" data-goto="upload">📤 رفع ملف تقرير المغادرات</button>
+        <button class="iconbtn" type="button" data-goto="run">⚡ تنفيذ المعالجة</button>
+        <button class="iconbtn" type="button" data-goto="chart">📊 مخطط الالتزام ثلاثي الأبعاد</button>
+        <button class="iconbtn" type="button" id="heroGear">⚙️ إعدادات الربط المباشر</button>
+        <button class="iconbtn danger" type="button" data-goto="cleanup">🧹 تنظيف البيانات لاستقبال ملف جديد</button>
+      </div>
+      <div class="hmeta" id="heroMeta"></div>
+    </div>
+
+    <div class="kpis" id="dashKpis"></div>
+
+    <div class="grid g-2">
+      <section class="card chartcard">
+        <h2>🥧 توزيع أنواع الطلبات في الملف <span class="tagline">مخطط دائري ثلاثي الأبعاد</span></h2>
+        <div class="cbody">
+          <div class="stage">
+            <span class="stage-cap">قرص مُجسَّم بعمق وظل منظور</span>
+            <canvas id="chartTypes" aria-label="توزيع أنواع الطلبات"></canvas>
+            <div class="tipbox"></div>
+          </div>
+          <div class="legend" data-legend></div>
+        </div>
+        <div class="pad tight"><div class="chart-note" id="typesNote"></div></div>
+      </section>
+
+      <section class="card chartcard">
+        <h2>👥 حالة الموظفين بعد المراجعة <span class="tagline">مخطط حلقي ثلاثي الأبعاد</span></h2>
+        <div class="cbody">
+          <div class="stage">
+            <span class="stage-cap">نسبة الالتزام العامة</span>
+            <canvas id="chartEmp" aria-label="حالة الموظفين مقابل المخالفات"></canvas>
+            <div class="tipbox"></div>
+          </div>
+          <div class="legend" data-legend></div>
+        </div>
+        <div class="pad tight"><div class="chart-note" id="empNote"></div></div>
+      </section>
+    </div>
+
+    <div class="grid g-2">
+      <section class="card">
+        <h2>⚖️ أبرز المؤشرات القانونية <span class="tagline">مقارنة بصرية سريعة</span></h2>
+        <div class="pad tight">
+          <div class="bars" id="dashBars"></div>
+          <div class="actrow">
+            <button class="ghost" type="button" data-goto="result">النتيجة الشاملة ←</button>
+            <button class="ghost" type="button" data-goto="chart">لوحة التزام الإدارات ←</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>🧭 خطوات العمل <span class="tagline">ثلاث خطوات فقط</span></h2>
+        <div class="pad tight">
+          <div class="feed">
+            <div class="fitem"><span class="fico">1️⃣</span>
+              <span><span class="ft">ارفع ملف تقرير المغادرات (.xlsx)</span>
+              <span class="fs">بنفس ترويسات التصدير العربية المعتمدة</span></span>
+              <button class="ghost" type="button" data-goto="upload">انتقال</button></div>
+            <div class="fitem"><span class="fico">2️⃣</span>
+              <span><span class="ft">نفّذ المعالجة بضغطة واحدة</span>
+              <span class="fs">استيراد ← مراجعة قانونية ← إصدار Excel</span></span>
+              <button class="ghost" type="button" data-goto="run">انتقال</button></div>
+            <div class="fitem"><span class="fico">3️⃣</span>
+              <span><span class="ft">راجع النتيجة ونزّل التقارير</span>
+              <span class="fs">5 أوراق + 10 تقارير قانونية مستقلة</span></span>
+              <button class="ghost" type="button" data-goto="result">انتقال</button></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+
+
+  <section class="card screen" data-screen="upload">
+    <h2><span class="num">1</span> ارفع ملف تقرير المغادرات</h2>
+    <div class="pad">
+      <div id="drop" class="drop" role="button" tabindex="0" aria-label="اختيار ملف Excel">
+        <div class="drop-ico">📄</div>
+        <div class="drop-t">اسحب ملف Excel هنا أو اضغط للاختيار</div>
+        <div class="drop-s">صيغة .xlsx — بنفس ترويسات التصدير العربية (الرقم الوظيفي، نوع الطلب، ساعة الحضور، ساعة الغياب، الحالة…)</div>
+        <input id="file" type="file" accept=".xlsx,.xls" hidden />
+      </div>
+      <div id="picked" class="picked" hidden>
+        <span class="fname" id="fname"></span>
+        <span class="fsize" id="fsize"></span>
+        <button class="ghost" id="clear" type="button">إزالة الملف</button>
+      </div>
+      <details class="opts">
+        <summary>خيارات متقدمة</summary>
+        <label class="chk"><input type="checkbox" id="replace" checked /> استبدال بيانات المرحلة السابقة قبل الاستيراد (يُنصح بتركه مفعّلاً)</label>
+        <label class="chk"><input type="checkbox" id="autoDl" checked /> تنزيل ملف Excel تلقائياً عند انتهاء المعالجة</label>
+      </details>
+      <div class="mode-note off" id="modeNote" hidden></div>
+    </div>
+  </section>
+
+  <!-- ======= شاشة: تنظيف البيانات (تفريغ الجداول لاستقبال بيانات جديدة) ======= -->
+  <section class="card screen" data-screen="cleanup" id="cleanup">
+    <h2>🧹 تنظيف البيانات واستقبال بيانات جديدة <span class="tagline">حذف نهائي — بتأكيد نصّي</span></h2>
+    <div class="pad">
+      <div class="dz">
+        <div class="dz-warn">
+          <span class="i">⚠️</span>
+          <span>
+            <b>عملية حذف نهائي.</b> تُفرَّغ جداول قاعدة البيانات <code>AttendanceAudit</code> ولا يمكن استرجاع الصفوف بعد التنفيذ —
+            خُذ نسخة احتياطية إن كنت تحتاج البيانات الحالية. لا يُحذف هيكل الجداول ولا الـ Views ولا الإجراءات المخزّنة ولا ملفات الإعدادات.
+            راجع القائمة أدناه لتعرف بالضبط ما سيُحذف وما سيبقى.
+          </span>
+        </div>
+
+        <div class="dz-scope">
+          <label class="dz-opt">
+            <input type="radio" name="dzScope" value="data" checked />
+            <span>
+              <b>بيانات التشغيل والتحليل (موصى به)</b>
+              <i>تقرير المغادرات المستورد ونتائج مراجعته، ومخالفات التأخير الأسبوعي، والورديات، وبصمات الحضور ونتائج تحليلها، والتصاريح، والعقوبات، وسجلّات التشغيل — مع الإبقاء على الموظفين والإدارات والعطل وأنواع الإجازات وإعدادات المنظومة.</i>
+            </span>
+          </label>
+          <label class="dz-opt">
+            <input type="radio" name="dzScope" value="all" />
+            <span>
+              <b>مسح شامل (كل شيء من الصفر)</b>
+              <i>ما سبق + البيانات المرجعية: الموظفون، الإدارات، الفئات الوظيفية، جداول الدوام، أنواع الإجازات، العطل الرسمية — وأي جدول آخر موجود في قاعدة البيانات.</i>
+            </span>
+          </label>
+        </div>
+
+        <div class="dz-opts">
+          <label><input type="checkbox" id="dzRule" /> إعادة إعدادات المادة 118/ج إلى القيم الافتراضية (appsettings.json)</label>
+        </div>
+
+        <div class="dz-bar">
+          <button class="ghost" id="dzRefresh" type="button">🔄 تحديث العدّادات</button>
+          <span class="dz-sum" id="dzSum">جارٍ قراءة حالة قاعدة البيانات…</span>
+        </div>
+
+        <div class="dz-tablewrap">
+          <table class="dz-table">
+            <thead><tr><th>الجدول والوصف</th><th>عدد الصفوف</th><th>الإجراء</th></tr></thead>
+            <tbody id="dzTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="dz-confirm">
+          <label for="dzConfirm">لتنفيذ التنظيف اكتب كلمة <b>حذف</b> في الحقل ثم اضغط الزر (حماية من الحذف بالخطأ):</label>
+          <input id="dzConfirm" type="text" autocomplete="off" spellcheck="false" placeholder="حذف" />
+          <div class="dz-actions">
+            <button class="dz-run" id="dzRun" type="button" disabled>🧹 تنظيف كافة البيانات الآن</button>
+            <button class="ghost" id="dzDry" type="button">🔍 معاينة بلا حذف</button>
+            <button class="ghost" type="button" data-goto="upload">📤 الانتقال إلى رفع ملف جديد</button>
+          </div>
+        </div>
+
+        <div class="err" id="dzErr" hidden></div>
+        <div class="dz-done" id="dzResult" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="run">
+    <h2><span class="num">2</span> نفّذ المعالجة بضغطة واحدة</h2>
+    <div class="pad">
+      <button id="go" class="primary big" type="button" disabled>تحليل وإصدار تقرير Excel</button>
+      <ol class="steps" id="steps">
+        <li data-k="import"><span class="sd"></span><b>الاستيراد إلى جدول المرحلة</b><i>بانتظار البدء</i></li>
+        <li data-k="review"><span class="sd"></span><b>المراجعة القانونية (118/ب + 118/ج + المكافأة)</b><i>بانتظار البدء</i></li>
+        <li data-k="export"><span class="sd"></span><b>إعداد ملف Excel متعدد الأوراق</b><i>بانتظار البدء</i></li>
+      </ol>
+      <div id="err" class="err" hidden></div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="result" id="result" hidden>
+    <h2><span class="num">3</span> النتيجة الشاملة</h2>
+    <div class="pad">
+      <div class="kpis" id="kpis"></div>
+      <div class="acts">
+        <button id="dl" class="primary" type="button">تنزيل ملف Excel (5 أوراق)</button>
+        <button id="again" class="ghost" type="button">معالجة ملف آخر</button>
+        <span class="meta" id="meta"></span>
+      </div>
+      <div class="sheets" id="sheets"></div>
+      <details open>
+        <summary>التقارير القانونية الاحترافية — تقرير مستقل لكل قاعدة في الوثيقة (10 أوراق)</summary>
+        <div class="sheets" id="sheetsLegal"></div>
+        <div class="acts">
+          <button id="dlLegal" class="ghost" type="button">تنزيل التقارير القانونية (10 أوراق)</button>
+          <span class="meta" id="legalMeta"></span>
+        </div>
+      </details>
+      <details open>
+        <summary>توزيع أنواع الطلبات في الملف المرفوع</summary>
+        <table>
+          <thead><tr><th>نوع الطلب</th><th>التصنيف المعتمد</th><th>عدد الصفوف</th></tr></thead>
+          <tbody id="types"></tbody>
+        </table>
+      </details>
+      <details>
+        <summary>تفاصيل تقنية (JSON)</summary>
+        <pre id="json"></pre>
+      </details>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="chart">
+    <h2>📊 أكثر الإدارات التزاماً بالقوانين — مخطط دائري ثلاثي الأبعاد</h2>
+    <div class="pad">
+      <div class="cmpctl">
+        <label>التجميع
+          <select id="cmpGrp">
+            <option value="main" selected>الإدارة الرئيسية (المديريات)</option>
+            <option value="dept">الإدارة (الأقسام)</option>
+          </select>
+        </label>
+        <label>الترتيب
+          <select id="cmpSort">
+            <option value="asc" selected>تصاعدي: الأكثر التزاماً أولاً</option>
+            <option value="desc">تنازلي: الأقل التزاماً أولاً</option>
+          </select>
+        </label>
+        <label>أدنى عدد موظفين
+          <select id="cmpMin">
+            <option value="1">الكل (بلا حد)</option>
+            <option value="3" selected>3 موظفين وأكثر</option>
+            <option value="5">5 موظفين وأكثر</option>
+            <option value="10">10 موظفين وأكثر</option>
+          </select>
+        </label>
+        <label>عدد الشرائح في المخطط
+          <select id="cmpTop">
+            <option value="6">أعلى 6 إدارات</option>
+            <option value="8" selected>أعلى 8 إدارات</option>
+            <option value="10">أعلى 10 إدارات</option>
+            <option value="12">أعلى 12 إدارة</option>
+            <option value="all">كل الإدارات</option>
+          </select>
+        </label>
+        <button class="ghost" id="cmpRefresh" type="button">تحديث المخطط</button>
+      </div>
+
+      <div class="cmpsplit">
+        <div class="chartbox">
+          <canvas id="pie" aria-label="مخطط دائري ثلاثي الأبعاد لنسب التزام الإدارات"></canvas>
+          <div id="tip"></div>
+          <div class="ramp"><span>100%</span><i></i><span>0%</span></div>
+        </div>
+        <div>
+          <div class="cmptbl-wrap">
+            <table class="cmptbl">
+              <thead>
+                <tr><th>#</th><th>الإدارة</th><th>موظفون</th><th>مخالفون</th><th>نسبة الالتزام</th></tr>
+              </thead>
+              <tbody id="cmpLegend"></tbody>
+            </table>
+          </div>
+          <div class="cmpnote" id="cmpNote"></div>
+          <div class="err" id="cmpErr" hidden></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+<footer class="shellfoot">
+  AttendanceApi — واجهة محلية تعمل دون إنترنت
+  <a href="/console.html">لوحة المطوّرين (كل نقاط النهاية)</a>
+  <a href="/punch.html">تحليل بصمات الحضور والانصراف (المواد 7 و112 و118 + المكافأة)</a>
+  <a href="/openapi/v1.json" target="_blank" rel="noopener">وثيقة OpenAPI</a>
+</footer>
+
+<!-- نافذة الإعدادات: تفعيل الربط المباشر بقاعدة البيانات -->
+<div id="dsModal" class="modal" hidden>
+  <div class="msheet" role="dialog" aria-modal="true" aria-labelledby="dsTitle">
+    <div class="mhead">
+      <h2 id="dsTitle">⚙️ الإعدادات — الربط المباشر بقاعدة البيانات</h2>
+      <button class="ghost" id="dsClose" type="button">إغلاق ✕</button>
+    </div>
+    <div class="mpad">
+
+      <label class="switchline" for="dsEnable">
+        <input type="checkbox" id="dsEnable" />
+        <b>تفعيل الربط المباشر بقاعدة البيانات</b>
+        <span>عند التفعيل تُقرأ النتائج من قاعدة البيانات مباشرة (قراءة ← استيراد جدول المرحلة ← مراجعة قانونية ← عرض في اللوحة) بلا رفع ملف Excel.</span>
+      </label>
+
+      <div class="msec">
+        <h3>1) بيانات الاتصال بالمصدر</h3>
+        <div class="mgrid">
+          <label class="mfield">وضع الاتصال
+            <select id="dsMode">
+              <option value="app">قاعدة بيانات النظام الحالية (AttendanceAudit)</option>
+              <option value="ext">خادم SQL Server خارجي / مخصّص</option>
+            </select>
+          </label>
+          <label class="mfield ext-only">اسم الخادم
+            <input id="dsServer" type="text" placeholder=".\\SQLEXPRESS" />
+          </label>
+          <label class="mfield ext-only">قاعدة البيانات
+            <input id="dsDatabase" type="text" placeholder="HR" />
+          </label>
+          <label class="mfield ext-only">المصادقة
+            <select id="dsAuth">
+              <option value="windows">مصادقة ويندوز (Integrated Security)</option>
+              <option value="sql">مستخدم وكلمة مرور SQL</option>
+            </select>
+          </label>
+          <label class="mfield ext-only sql-only">اسم المستخدم
+            <input id="dsUser" type="text" autocomplete="off" />
+          </label>
+          <label class="mfield ext-only sql-only">كلمة المرور
+            <input id="dsPass" type="password" autocomplete="new-password" placeholder="كلمة المرور" />
+          </label>
+          <label class="mfield">مهلة التنفيذ (ثانية)
+            <input id="dsTimeout" type="number" min="15" max="3600" step="15" value="300" />
+          </label>
+          <label class="mfield wide ext-only">سلسلة اتصال كاملة (اختياري — تتجاوز الحقول أعلاه)
+            <textarea id="dsConnStr" spellcheck="false" placeholder="Server=...;Database=...;User Id=...;Password=...;"></textarea>
+          </label>
+        </div>
+        <div class="inrow">
+          <label><input type="checkbox" id="dsTrust" checked /> الثقة بشهادة الخادم (TrustServerCertificate)</label>
+          <label><input type="checkbox" id="dsEncrypt" checked /> تشفير الاتصال (Encrypt)</label>
+          <button class="ghost" id="dsClearPass" type="button">حذف كلمة المرور المخزّنة</button>
+        </div>
+        <div class="dsstate">قاعدة بيانات النظام: <b id="dsTarget">-</b> — ملف الإعدادات: <b id="dsFile">-</b></div>
+      </div>
+
+      <div class="msec">
+        <h3>2) استعلام المصدر (قراءة فقط)</h3>
+        <label class="mfield wide">الاستعلام — يجب أن يعيد أعمدة التقرير العربية، أو الأعمدة نفسها بالترتيب
+          <textarea id="dsQuery" spellcheck="false"></textarea>
+        </label>
+        <div class="mgrid">
+          <label class="mfield">وصف المصدر (يظهر في اللوحة والتقرير)
+            <input id="dsLabel" type="text" placeholder="نظام الموارد البشرية" />
+          </label>
+          <label class="mfield">أقصى عدد صفوف في المزامنة
+            <input id="dsMaxRows" type="number" min="1" max="5000000" step="1000" value="100000" />
+          </label>
+        </div>
+        <div class="mbtns">
+          <button class="ghost" id="dsDefaultQuery" type="button">استعادة الاستعلام الافتراضي</button>
+        </div>
+      </div>
+
+      <div class="msec">
+        <h3>3) الأتمتة</h3>
+        <label class="switchline" for="dsAutoLoad">
+          <input type="checkbox" id="dsAutoLoad" checked />
+          مزامنة تلقائية عند فتح اللوحة
+          <span>تُسحب النتائج من قاعدة البيانات فور فتح الصفحة وتُعرض في اللوحة مباشرة.</span>
+        </label>
+        <div class="mgrid">
+          <label class="mfield">مزامنة دورية (كل كم دقيقة؟ 0 = معطّل)
+            <input id="dsMinutes" type="number" min="0" max="1440" step="5" value="0" />
+          </label>
+          <div class="mfield">خيار المزامنة
+            <div class="inrow" style="padding-top:7px">
+              <label><input type="checkbox" id="dsReplace" checked /> استبدال بيانات المرحلة قبل الاستيراد</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mbtns">
+        <button class="primary" id="dsSave" type="button">حفظ الإعدادات</button>
+        <button class="ghost" id="dsSync" type="button">🔄 مزامنة الآن وتحديث اللوحة</button>
+        <button class="ghost" id="dsTest" type="button">اختبار الاتصال</button>
+        <button class="ghost" id="dsPreview" type="button">معاينة أول 20 صفاً</button>
+      </div>
+
+      <div class="dsmsg" id="dsMsg" hidden></div>
+      <div class="dsstate" id="dsState"></div>
+      <div class="prev-wrap" id="dsPrev" hidden></div>
+    </div>
+  </div>
+</div>
+</div><!-- /shell-body -->
+
+<script src="/assets/shell.js?v=1"></script>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+
+const SHEETS = [
+  ["ملخص المراجعة", "لكل موظف/شهر: الاستئذانات والإجازات وأيام 118/ب و118/ج وخصم المكافأة"],
+  ["التزام الإدارات", "نسبة التزام كل إدارة رئيسية (مديرية) — الأكثر التزاماً أولاً، مع أيام 118/ب و118/ج وتأخيرها"],
+  ["مخالفات 118-ب", "الطلبات التي تجاوزت 4 ساعات (خصم يوم لكل طلب)"],
+  ["مخالفات 118-ج الأسبوعية", "دقائق التأخير/الانصراف المبكر أسبوعياً (60 دقيقة = خصم يوم)"],
+  ["تفصيل الطلبات", "كل الصفوف المستوردة بعد التطبيع (مع ساعتي الحضور والغياب)"]
+];
+
+let file = null, blob = null, fileNameOut = "", busy = false;
+
+/* أوراق «التقارير القانونية الاحترافية» — تقرير مستقل لكل قاعدة في الوثيقة */
+const LG_SHEETS = [
+  ["الملخص التنفيذي", "أرقام كل قاعدة: الحالات، الموظفون، أيام الخصم من الإجازات وأيام الحسم من الراتب"],
+  ["دليل القواعد القانونية", "نص كل قاعدة في الوثيقة والعقوبة وأساس الاحتساب من تقرير المغادرات"],
+  ["المتأخرون 60 دقيقة - 118-ج", "تأخير/انصراف مبكر أسبوعي ≥ 60 دقيقة → خصم يوم من الإجازات لكل أسبوع"],
+  ["الاستئذان فوق 4 ساعات - 118-ب", "استئذان تجاوز 4 ساعات في يوم واحد → خصم يوم من الإجازة السنوية"],
+  ["التأخير الصباحي - المادة 7", "3 تأخيرات = تنبيه خطي، 4 = إنذار خطي، وأكثر من 4 = حسم يومين من الراتب"],
+  ["خصم المكافأة - تجاوز 15 يوماً", "غياب شهري أكثر من 15 يوماً → خصم 50% من المكافأة"],
+  ["الإجازات المرضية - المادة 112", "تدرّج النسب: 100% حتى 120 يوماً، 75%، 50%، وبلا راتب بعد 360 يوماً"],
+  ["رصيد الإجازة السنوية", "الإجازة المستخدمة والرصيد المتبقي وحالة الرصيد المنخفض"],
+  ["كشف الخصومات المُجمَّع", "لكل موظف: أيام الخصم من الإجازات وأيام الحسم من الراتب والمكافأة"],
+  ["منهجية الاحتساب", "خطوات المعالجة وحدود البيانات والمراجعة البشرية قبل التسوية"]
+];
+
+const fmt = v => (v === null || v === undefined || v === "") ? "0" : Number(v).toLocaleString("en-US");
+const kb = b => b >= 1048576 ? (b / 1048576).toFixed(2) + " م.ب" : Math.max(1, Math.round(b / 1024)) + " ك.ب";
+
+function step(k, state, text) {
+  const li = document.querySelector('.steps li[data-k="' + k + '"]');
+  li.className = state;
+  li.querySelector("i").textContent = text;
+}
+function states(k) { return document.querySelector('.steps li[data-k="' + k + '"]').className; }
+function fail(msg) { const e = $("err"); e.hidden = false; e.textContent = msg; }
+function clearErr() { $("err").hidden = true; }
+
+async function poll() {
+  const dot = $("dot"), txt = $("statusTxt");
+  try {
+    const r = await fetch("/api/v1/attendance/audit-status", { cache: "no-store" });
+    const j = await r.json();
+    dot.className = "dot up";
+    txt.textContent = j.isRunning ? "الخدمة متصلة — المراجعة تعمل الآن" : "الخدمة متصلة وجاهزة";
+  } catch (_) {
+    dot.className = "dot down";
+    txt.textContent = "تعذّر الاتصال بخدمة المراجعة";
+  }
+}
+
+/* ---------- الاستدعاءات ---------- */
+function msgFrom(r, j, raw) {
+  if (j) return j.message || j.title || j.detail || ("HTTP " + r.status);
+  return (raw ? raw.slice(0, 200) : "") || ("HTTP " + r.status + " " + r.statusText);
+}
+async function req(url, opts) {
+  const r = await fetch(url, Object.assign({ cache: "no-store" }, opts || {}));
+  const raw = await r.text();
+  let j = null;
+  try { j = JSON.parse(raw); } catch (_) { }
+  if (!r.ok) throw new Error(msgFrom(r, j, raw));
+  if (!j) throw new Error("استجابة غير متوقعة من الخدمة.");
+  return j;
+}
+function headerFileName(r) {
+  const cd = r.headers.get("content-disposition") || "";
+  const m = /filename\*=UTF-8''([^;]+)/i.exec(cd) || /filename="?([^";]+)"?/i.exec(cd);
+  if (!m) return "";
+  try { return decodeURIComponent(m[1]); } catch (_) { return m[1]; }
+}
+
+/* ---------- تنزيل الملف الناتج ---------- */
+function download() {
+  if (!blob) { fail("لا يوجد ملف ناتج بعد — نفّذ المعالجة أولاً."); return; }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = fileNameOut || "مراجعة-المغادرات.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+
+/* ---------- تنزيل «التقارير القانونية الاحترافية» (10 أوراق) ---------- */
+async function downloadLegal() {
+  const btn = $("dlLegal");
+  btn.disabled = true;
+  const label = btn.textContent;
+  btn.textContent = "جارٍ إعداد التقارير…";
+  try {
+    const r = await fetch("/api/v1/departures/export-legal-reports", { cache: "no-store" });
+    if (!r.ok) {
+      const raw = await r.text();
+      let j = null; try { j = JSON.parse(raw); } catch (_) { }
+      throw new Error(msgFrom(r, j, raw));
+    }
+    const b = await r.blob();
+    const name = headerFileName(r) || "التقارير-القانونية.xlsx";
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(b);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    $("legalMeta").textContent = name + " — " + kb(b.size);
+  } catch (e) {
+    fail("تعذّر إنشاء التقارير القانونية: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
+
+/* ---------- المسار الواحد: استيراد ← مراجعة ← إصدار ---------- */
+async function runAll() {
+  if (busy || !file) return;
+  busy = true; clearErr();
+  $("result").hidden = true;
+  $("dl").disabled = true;
+  $("go").disabled = true;
+  $("go").textContent = "جارٍ المعالجة…";
+  ["import", "review", "export"].forEach(k => step(k, "", "بانتظار البدء"));
+
+  const t0 = performance.now();
+  try {
+    step("import", "run", "جارٍ رفع الملف واستيراده…");
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    const imp = await req("/api/v1/departures/import?replace=" + ($("replace").checked ? "true" : "false"),
+      { method: "POST", body: fd });
+    step("import", "done", fmt(imp.rowsImported) + " صفاً مستورداً — تم تجاهل " + fmt(imp.rowsSkipped));
+
+    step("review", "run", "جارٍ تطبيق المواد 118/ب و118/ج وقاعدة المكافأة…");
+    const rev = await req("/api/v1/departures/review", { method: "POST" });
+    step("review", "done", fmt(rev.employeesReviewed) + " موظفاً — " +
+      fmt(rev.employeesWithViolations) + " لديهم مخالفات");
+
+    step("export", "run", "جارٍ بناء ملف Excel (5 أوراق)…");
+    const r = await fetch("/api/v1/departures/export-excel", { cache: "no-store" });
+    if (!r.ok) {
+      const raw = await r.text();
+      let j = null; try { j = JSON.parse(raw); } catch (_) { }
+      throw new Error(msgFrom(r, j, raw));
+    }
+    blob = await r.blob();
+    fileNameOut = headerFileName(r) || "مراجعة-المغادرات.xlsx";
+    step("export", "done", fileNameOut + " — " + kb(blob.size));
+
+    show(imp, rev, Math.round(performance.now() - t0), "ملف Excel: " + file.name);
+    $("dl").disabled = false;
+    if ($("autoDl").checked) download();
+  } catch (err) {
+    const k = ["import", "review", "export"].find(x => states(x) === "run");
+    step(k || "import", "fail", "فشل");
+    fail("تعذّر إكمال المعالجة عند خطوة «" + (k === "import" ? "الاستيراد" : k === "review" ? "المراجعة" : "إصدار الملف") +
+      "»: " + err.message);
+  } finally {
+    busy = false;
+    $("go").disabled = !file;
+    $("go").textContent = "تحليل وإصدار تقرير Excel";
+  }
+}
+
+/* ---------- عرض النتيجة الشاملة ---------- */
+function classify(t) {
+  if (t.indexOf("استئذان") === 0) return { label: "استئذان — المادتان 118/ب و118/ج", official: false };
+  if (t.indexOf("سنوية") >= 0) return { label: "إجازة سنوية — أيام غياب", official: false };
+  if (t.indexOf("مرضية") >= 0) return { label: "إجازة مرضية — أيام غياب", official: false };
+  if (t.indexOf("رسمية") === 0) return { label: "مهمة رسمية — لا تُحتسب مخالفة", official: true };
+  return { label: "أخرى — تُعرض ولا تُحتسب", official: false };
+}
+function renderKpis(imp, rev) {
+  const t = [
+    ["info", "الطلبات المعالجة", fmt(rev.totalRequests), "منها " + fmt(rev.acceptedRequests) + " بالحالة «مقبول»"],
+    ["info", "الموظفون", fmt(rev.employeesReviewed), "منهم " + fmt(rev.employeesWithViolations) + " لديهم مخالفات"],
+    [rev.totalArticle118bDays > 0 ? "warn" : "ok", "أيام المادة 118/ب", fmt(rev.totalArticle118bDays) + " يوم",
+      fmt(rev.employeesOver4Hours) + " طلباً تجاوز 4 ساعات"],
+    [rev.weeksOver60Minutes > 0 ? "warn" : "ok", "أسابيع ≥ 60 دقيقة", fmt(rev.weeksOver60Minutes) + " أسبوعاً",
+      fmt(rev.employeesOver60Minutes) + " موظفاً (المادة 118/ج)"],
+    ["warn", "أيام المادة 118/ج", fmt(rev.totalArticle118cDays) + " يوم",
+      "إجمالي التأخير " + fmt(rev.totalWeeklyLateMinutes) + " دقيقة"],
+    [rev.employeesExceeding15Days > 0 ? "bad" : "ok", "تجاوز 15 يوماً", fmt(rev.employeesExceeding15Days) + " موظفاً",
+      "خصم 50% من المكافأة"]
+  ];
+  $("kpis").innerHTML = t.map(x =>
+    '<div class="kpi ' + x[0] + '"><div class="v">' + x[2] + '</div><div class="l">' + x[1] +
+    '</div><div class="n">' + x[3] + '</div></div>').join("");
+}
+function show(imp, rev, ms, srcLabel, noJump) {
+  renderKpis(imp, rev);
+  $("sheets").innerHTML = SHEETS.map(s =>
+    '<div class="sheet"><b>' + s[0] + '</b><span>' + s[1] + '</span></div>').join("");
+  $("sheetsLegal").innerHTML = LG_SHEETS.map(s =>
+    '<div class="sheet"><b>' + s[0] + '</b><span>' + s[1] + '</span></div>').join("");
+  const rows = Object.keys(imp.requestTypes || {}).map(k => [k, imp.requestTypes[k]]).sort((a, b) => b[1] - a[1]);
+  $("types").innerHTML = rows.length
+    ? rows.map(r => {
+        const c = classify(r[0]);
+        return '<tr><td>' + r[0] + '</td><td><span class="tag' + (c.official ? " skip" : "") + '">' +
+          c.label + '</span></td><td class="n">' + fmt(r[1]) + '</td></tr>';
+      }).join("")
+    : '<tr><td colspan="3">لا توجد بيانات في الملف.</td></tr>';
+  $("meta").textContent = "المصدر: " + (srcLabel || "ملف Excel مرفوع") + " — زمن المعالجة: " +
+    (ms / 1000).toFixed(1) + " ثانية — " + new Date().toLocaleString("ar-EG-u-nu-latn");
+  $("json").textContent = JSON.stringify({ import: imp, review: rev }, null, 2);
+  loadCompliance();                       // تحديث لوحة التزام الإدارات على نتيجة المعالجة الجديدة
+  $("result").hidden = false;
+  renderDash(imp, rev);                   // تحديث اللوحة المركزية: مؤشرات ومخططات ثلاثية الأبعاد
+  if (window.APP && window.APP.shell) {
+    // الانتقال تلقائياً إلى شاشة النتيجة — إلا عند التحميل التلقائي حتى لا يُلغى رابط الشاشة المطلوب
+    if (noJump !== true) window.APP.shell.go("result");
+  } else {
+    $("result").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
+/* ---------- لوحة التزام الإدارات: مخطط دائري ثلاثي الأبعاد ---------- */
+const CMP_OTHER = [100, 116, 139];                 // لون شريحة «باقي الإدارات»
+const CMP_RAMP = [[0, [185, 28, 28]], [40, [234, 88, 12]], [60, [245, 158, 11]],
+                  [75, [234, 179, 8]], [90, [74, 222, 128]], [100, [34, 197, 94]]];
+let cmpData = null, cmpSlices = [], cmpHover = -1, cmpGeo = null;
+
+const rgbCss = c => "rgb(" + (c[0] | 0) + "," + (c[1] | 0) + "," + (c[2] | 0) + ")";
+const mixC = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const trimTxt = (s, n) => (s.length > n ? s.slice(0, n - 1) + "…" : s);
+
+/* مقياس الألوان: 0% أحمر ← 60% برتقالي ← 90% أخضر فاتح ← 100% أخضر */
+function rampColor(pct) {
+  const p = Math.max(0, Math.min(100, Number(pct) || 0));
+  for (let i = 1; i < CMP_RAMP.length; i++) {
+    const p0 = CMP_RAMP[i - 1][0], c0 = CMP_RAMP[i - 1][1], p1 = CMP_RAMP[i][0], c1 = CMP_RAMP[i][1];
+    if (p <= p1) return mixC(c0, c1, p1 === p0 ? 0 : (p - p0) / (p1 - p0));
+  }
+  return CMP_RAMP[CMP_RAMP.length - 1][1];
+}
+/* تفتيح (f>1) أو تعتيم (f<1) لون RGB */
+const shade = (c, f) => c.map(v => Math.round(f <= 1 ? v * f : v + (255 - v) * (f - 1)));
+
+async function loadCompliance() {
+  const grp = $("cmpGrp").value === "main" ? "true" : "false";
+  const min = $("cmpMin").value;
+  const err = $("cmpErr");
+  err.hidden = true;
+  try {
+    const fresh = await req("/api/v1/departures/compliance-by-administration?byMainDepartment=" +
+      grp + "&minEmployees=" + min);
+    cmpData = fresh;
+    renderCompliance();
+  } catch (e) {
+    cmpData = null; cmpSlices = []; cmpHover = -1;
+    drawDonut();
+    $("cmpLegend").innerHTML = '<tr><td colspan="5">—</td></tr>';
+    $("cmpNote").textContent = "";
+    err.hidden = false;
+    err.textContent = "تعذّر تحميل بيانات الالتزام: " + e.message;
+  }
+}
+/* ترتيب المجموعات حسب اختيار المستخدم (تصاعدي = الأكثر التزاماً أولاً) */
+function orderedItems() {
+  const items = cmpData ? cmpData.items.slice() : [];
+  return $("cmpSort").value === "asc" ? items : items.reverse();
+}
+/* اختيار الشرائح المعروضة في المخطط (الأعلى ترتيباً + شريحة «باقي الإدارات») */
+function buildSlices() {
+  const all = orderedItems();
+  const raw = $("cmpTop").value;
+  const topN = raw === "all" ? all.length : parseInt(raw, 10);
+  const head = all.slice(0, topN), rest = all.slice(topN);
+
+  const slices = head.map(r => ({
+    label: r.administration, value: r.employees, pct: r.compliancePercent,
+    color: rampColor(r.compliancePercent), subject: r, ranks: [r.rank]
+  }));
+
+  if (rest.length) {
+    const emp = rest.reduce((a, r) => a + r.employees, 0);
+    const vio = rest.reduce((a, r) => a + r.violatingEmployees, 0);
+    slices.push({
+      label: "باقي الإدارات (" + rest.length + ")", value: emp,
+      pct: emp ? (emp - vio) * 100 / emp : 0, color: CMP_OTHER,
+      rest: rest, ranks: rest.map(r => r.rank), others: true
+    });
+  }
+  return slices.filter(s => s.value > 0);
+}
+function renderCompliance() {
+  cmpSlices = buildSlices();
+  cmpHover = -1;
+  renderLegend();
+  drawDonut();
+  const d = cmpData;
+  const shownEmp = d.items.reduce((a, r) => a + r.employees, 0);
+  let html =
+    "المعروض: <b>" + fmt(d.items.length) + "</b> مجموعة (" + fmt(shownEmp) + " موظفاً) من أصل " +
+    fmt(d.totalGroups) + " مجموعة — الإجمالي العام: <b>" + fmt(d.totalEmployees) + "</b> موظفاً، " +
+    fmt(d.compliantEmployees) + " ملتزماً (<b>" + fmt(d.overallCompliancePercent) + "%</b>)، " +
+    fmt(d.totalArticle118bDays) + " يوم 118/ب، " + fmt(d.totalArticle118cDays) + " يوم 118/ج.";
+  const others = cmpSlices.find(s => s.others);
+  if (others) {
+    html += " شريحة «باقي الإدارات»: <b>" + fmt(others.rest.length) + "</b> إدارة (" +
+      fmt(others.value) + " موظفاً) — التزام <b>" + fmt(others.pct) + "%</b>.";
+  }
+  html += " نسبة الالتزام = الموظفون بلا أي مخالفة ÷ إجمالي الموظفين المراجَعين (المواد 118/ب و118/ج وقاعدة 15 يوماً).";
+  $("cmpNote").innerHTML = html;
+}
+function renderLegend() {
+  const rows = orderedItems();
+  $("cmpLegend").innerHTML = rows.length ? rows.map(r => {
+    const c = rgbCss(rampColor(r.compliancePercent));
+    const inChart = cmpSlices.some(s => s.ranks.indexOf(r.rank) >= 0);
+    return '<tr data-rank="' + r.rank + '"' + (inChart ? "" : ' class="off"') + '>' +
+      '<td class="c">' + r.rank + '</td>' +
+      '<td><span class="sw" style="background:' + c + '"></span>' + esc(r.administration) + '</td>' +
+      '<td class="c">' + fmt(r.employees) + '</td>' +
+      '<td class="c">' + fmt(r.violatingEmployees) + '</td>' +
+      '<td class="c"><span class="bar"><i style="width:' + Math.max(2, r.compliancePercent) +
+      '%;background:' + c + '"></i></span>' + fmt(r.compliancePercent) + '%</td></tr>';
+  }).join("") : '<tr><td colspan="5">لا توجد بيانات — ارفع ملفاً ونفّذ المعالجة أولاً.</td></tr>';
+}
+function sliceIndexForRank(rank) {
+  for (let i = 0; i < cmpSlices.length; i++) {
+    if (cmpSlices[i].ranks.indexOf(rank) >= 0) return i;
+  }
+  return -1;
+}
+/* ---------- رسم المخطط الدائري ثلاثي الأبعاد (إهليلجي مُجسَّم بفتحة وسطية) ---------- */
+function drawDonut() {
+  const cv = $("pie");
+  if (!cv) return;
+
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  const W = Math.max(260, cv.clientWidth || 330), H = 320;
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
+  cmpGeo = null;
+  if (!cmpSlices.length) return;
+
+  const total = cmpSlices.reduce((a, s) => a + s.value, 0) || 1;
+  const cx = W / 2, cy = H * 0.45, ky = 0.56;                 // ky = نسبة انضغاط المنظور
+  const rxOut = Math.min(W * 0.40, 156), ryOut = rxOut * ky;
+  const rIn = rxOut * 0.5, ryIn = rIn * ky;
+  const depth = Math.round(rxOut * 0.19);                     // سماكة الجسم ثلاثي الأبعاد
+
+  let a = -Math.PI / 2;
+  const angles = cmpSlices.map(s => {
+    const a0 = a;
+    a += (s.value / total) * Math.PI * 2;
+    return [a0, a];
+  });
+  cmpGeo = { cx: cx, cy: cy, rxOut: rxOut, ryOut: ryOut, rIn: rIn, angles: angles };
+
+  // قطاع حلقي على شكل بيضوي (يُستخدم للوجه العلوي والجدار)
+  const sector = (a0, a1, off) => {
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + off, rxOut, ryOut, 0, a0, a1);
+    ctx.ellipse(cx, cy + off, rIn, ryIn, 0, a1, a0, true);
+    ctx.closePath();
+  };
+
+  // 1) ظل أرضي ناعم
+  const shadow = ctx.createRadialGradient(cx, cy + depth + 12, 3, cx, cy + depth + 12, rxOut * 1.2);
+  shadow.addColorStop(0, "rgba(2,6,23,.6)");
+  shadow.addColorStop(1, "rgba(2,6,23,0)");
+  ctx.fillStyle = shadow;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + depth + 12, rxOut * 1.06, ryOut * 1.02, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 2) الجدار الخارجي: نسخة داكنة من المخطط مُزاحة للأسفل
+  cmpSlices.forEach((s, i) => {
+    ctx.fillStyle = rgbCss(shade(s.color, (cmpHover >= 0 && i !== cmpHover) ? 0.4 : 0.52));
+    sector(angles[i][0], angles[i][1], depth);
+    ctx.fill();
+  });
+
+  // 3) جدار الفتحة الداخلية (تجويف مظلَّل)
+  const wall = ctx.createLinearGradient(0, cy, 0, cy + depth + ryIn);
+  wall.addColorStop(0, "#1b2a45");
+  wall.addColorStop(1, "#070e1b");
+  ctx.fillStyle = wall;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy + depth, rIn, ryIn, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 4) الوجه العلوي بلمعة زجاجية
+  cmpSlices.forEach((s, i) => {
+    const hi = cmpHover === i;
+    const g = ctx.createLinearGradient(0, cy - ryOut, 0, cy + ryOut);
+    g.addColorStop(0, rgbCss(shade(s.color, hi ? 1.55 : 1.3)));
+    g.addColorStop(0.5, rgbCss(shade(s.color, hi ? 1.12 : 1)));
+    g.addColorStop(1, rgbCss(shade(s.color, 0.72)));
+    sector(angles[i][0], angles[i][1], 0);
+    ctx.fillStyle = g;
+    ctx.fill();
+    if (cmpHover >= 0 && !hi) {                     // تعتيم بقية الشرائح عند التحويم
+      ctx.fillStyle = "rgba(11,18,32,.5)";
+      ctx.fill();
+    }
+    ctx.strokeStyle = "rgba(10,17,31,.85)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    if (hi) {
+      ctx.strokeStyle = "rgba(226,232,240,.85)";
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+    }
+  });
+
+  // 5) تفريغ فتحة الوسط (شفافة فعلياً لخلفية البطاقة)
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rIn, ryIn, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+
+  // 6) نسب الالتزام على الشرائح (للمقاطع الواسعة فقط)
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = '600 11.5px "Segoe UI",Tahoma,sans-serif';
+  const rm = (rIn + rxOut) / 2;
+  cmpSlices.forEach((s, i) => {
+    if (angles[i][1] - angles[i][0] < 0.42) return;
+    const mid = (angles[i][0] + angles[i][1]) / 2;
+    const x = cx + Math.cos(mid) * rm, y = cy + Math.sin(mid) * rm * ky;
+    ctx.fillStyle = "rgba(6,13,24,.7)";
+    ctx.fillText(s.pct.toFixed(1) + "%", x + 1, y + 1);
+    ctx.fillStyle = "#f8fafc";
+    ctx.fillText(s.pct.toFixed(1) + "%", x, y);
+  });
+
+  // 7) متن وسط المخطط: نسبة الشريحة المحوَّم عليها أو الإجمالي العام
+  const hov = cmpHover >= 0 ? cmpSlices[cmpHover] : null;
+  ctx.fillStyle = hov ? "#e2e8f0" : "#38bdf8";
+  ctx.font = '800 21px "Segoe UI",Tahoma,sans-serif';
+  ctx.fillText((hov ? hov.pct : (cmpData ? cmpData.overallCompliancePercent : 0)).toFixed(1) + "%", cx, cy - 6);
+  ctx.fillStyle = "#94a3b8";
+  ctx.font = '600 11px "Segoe UI",Tahoma,sans-serif';
+  ctx.fillText(trimTxt(hov ? hov.label : "نسبة الالتزام الكلية", 24), cx, cy + 13);
+}
+
+function markRow(idx) {
+  const ranks = idx >= 0 && cmpSlices[idx] ? cmpSlices[idx].ranks : [];
+  Array.prototype.forEach.call($("cmpLegend").querySelectorAll("tr[data-rank]"), tr => {
+    tr.classList.toggle("hl", ranks.indexOf(parseInt(tr.dataset.rank, 10)) >= 0);
+  });
+}
+
+/* ---------- تفاعل المخطط: تحويم، تلميح، وتحديث ---------- */
+function hitDonut(mx, my) {
+  if (!cmpGeo) return -1;
+  const dx = (mx - cmpGeo.cx) / cmpGeo.rxOut;
+  const dy = (my - cmpGeo.cy) / cmpGeo.ryOut;
+  const rr = Math.sqrt(dx * dx + dy * dy);
+  if (rr > 1.02) return -1;                                    // خارج المخطط
+  if (rr < (cmpGeo.rIn / cmpGeo.rxOut) * 0.94) return -1;       // داخل الفتحة الوسطية
+  let ang = Math.atan2(dy, dx);
+  if (ang < -Math.PI / 2) ang += Math.PI * 2;                   // توحيد نطاق الزوايا
+  for (let i = 0; i < cmpGeo.angles.length; i++) {
+    if (ang >= cmpGeo.angles[i][0] && ang < cmpGeo.angles[i][1]) return i;
+  }
+  return -1;
+}
+function showTip(clientX, clientY, idx) {
+  const tip = $("tip");
+  if (idx < 0) { tip.style.display = "none"; return; }
+  const s = cmpSlices[idx], box = $("pie").parentElement.getBoundingClientRect();
+  let html = "<b>" + esc(s.label) + "</b>نسبة الالتزام: <b>" + s.pct.toFixed(1) + "%</b>" +
+             "<br>عدد الموظفين: " + fmt(s.value);
+  if (s.subject) {
+    html += "<br>المخالفون: " + fmt(s.subject.violatingEmployees) +
+            " — الترتيب: " + s.subject.rank +
+            "<br>أيام 118/ب: " + fmt(s.subject.article118bDays) +
+            " — أيام 118/ج: " + fmt(s.subject.article118cDays);
+  } else {
+    html += "<br>مجموعة مُجمَّعة: " + fmt(s.rest.length) + " إدارة";
+  }
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  tip.style.left = Math.max(6, Math.min(clientX - box.left + 14, box.width - tip.offsetWidth - 6)) + "px";
+  tip.style.top = Math.max(6, clientY - box.top - tip.offsetHeight - 10) + "px";
+}
+$("pie").addEventListener("mousemove", e => {
+  const box = $("pie").getBoundingClientRect();
+  const idx = hitDonut(e.clientX - box.left, e.clientY - box.top);
+  if (idx !== cmpHover) { cmpHover = idx; markRow(idx); drawDonut(); }
+  showTip(e.clientX, e.clientY, idx);
+});
+$("pie").addEventListener("mouseleave", () => {
+  cmpHover = -1; markRow(-1); drawDonut();
+  $("tip").style.display = "none";
+});
+$("cmpLegend").addEventListener("mousemove", e => {
+  const tr = e.target.closest ? e.target.closest("tr[data-rank]") : null;
+  const idx = tr ? sliceIndexForRank(parseInt(tr.dataset.rank, 10)) : -1;
+  if (idx !== cmpHover) { cmpHover = idx; markRow(idx); drawDonut(); }
+});
+$("cmpLegend").addEventListener("mouseleave", () => {
+  cmpHover = -1; markRow(-1); drawDonut();
+});
+["cmpSort", "cmpTop"].forEach(id =>
+  $(id).addEventListener("change", () => { if (cmpData) renderCompliance(); }));
+["cmpGrp", "cmpMin"].forEach(id => $(id).addEventListener("change", loadCompliance));
+$("cmpRefresh").addEventListener("click", loadCompliance);
+
+// إعادة الرسم عند تغيّر حجم النافذة (يتكيّف مع DPR وحجم العمود).
+let cmpResizeTimer = null;
+window.addEventListener("resize", () => {
+  clearTimeout(cmpResizeTimer);
+  cmpResizeTimer = setTimeout(drawDonut, 150);
+});
+
+/* ---------- الإعدادات: الربط المباشر بقاعدة البيانات ---------- */
+let dsView = null, dsAutoTimer = null, dsSyncing = false;
+
+const dsJson = body => ({
+  method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+});
+
+function dsMsg(text, kind) {
+  const e = $("dsMsg");
+  if (!text) { e.hidden = true; return; }
+  e.hidden = false;
+  e.className = "dsmsg " + (kind || "");
+  e.textContent = text;
+}
+/* إظهار/إخفاء حقول «الخادم الخارجي» و«مستخدم SQL» بحسب الاختيار */
+function dsToggle() {
+  const ext = $("dsMode").value === "ext";
+  const sql = $("dsAuth").value === "sql";
+  document.querySelectorAll(".ext-only").forEach(el => el.classList.toggle("hid", !ext));
+  document.querySelectorAll(".sql-only").forEach(el => el.classList.toggle("hid", !ext || !sql));
+}
+/* تجميع قيم النموذج في جسم الطلب (كلمة مرور فارغة = الإبقاء على المحفوظة) */
+function collectSettings() {
+  return {
+    enabled: $("dsEnable").checked,
+    mode: $("dsMode").value,
+    server: $("dsServer").value.trim(),
+    database: $("dsDatabase").value.trim(),
+    auth: $("dsAuth").value,
+    userId: $("dsUser").value.trim(),
+    password: $("dsPass").value === "" ? null : $("dsPass").value,
+    trustServerCertificate: $("dsTrust").checked,
+    encrypt: $("dsEncrypt").checked,
+    commandTimeoutSeconds: Number($("dsTimeout").value) || 300,
+    connectionString: $("dsConnStr").value.trim(),
+    query: $("dsQuery").value,
+    maxRows: Number($("dsMaxRows").value) || 100000,
+    replaceExisting: $("dsReplace").checked,
+    autoSyncOnLoad: $("dsAutoLoad").checked,
+    autoSyncMinutes: Number($("dsMinutes").value) || 0,
+    sourceLabel: $("dsLabel").value.trim()
+  };
+}
+function renderDsState(st) {
+  const el = $("dsState");
+  if (!st || !st.lastSyncUtc) {
+    el.textContent = "لا توجد مزامنة سابقة — اضغط «مزامنة الآن وتحديث اللوحة» لسحب البيانات من المصدر.";
+    return;
+  }
+  el.innerHTML = (st.lastSyncOk ? "✅ " : "⛔ ") + "<b>آخر مزامنة:</b> " +
+    new Date(st.lastSyncUtc).toLocaleString("ar-EG-u-nu-latn") + " — <b>" + fmt(st.lastImportedRows) +
+    "</b> صفاً مستورداً" + (st.lastSkippedRows ? " (متجاهَل " + fmt(st.lastSkippedRows) + ")" : "") +
+    " — " + esc(st.lastMessage || "");
+}
+/* تحديث شارة الوضع في الترويسة + ملاحظة القسم الأول */
+function applyMode(v) {
+  const on = !!(v && v.enabled);
+  $("modePill").classList.toggle("live", on);
+  $("modeDot").className = "dot" + (on ? " up" : "");
+  $("modeTxt").textContent = on ? "الوضع: قاعدة بيانات مباشرة" : "الوضع: ملف Excel";
+
+  const note = $("modeNote");
+  const st = v && v.state ? v.state : null;
+  const where = st && st.lastSourceLabel ? st.lastSourceLabel : "قاعدة البيانات";
+
+  note.hidden = false;
+  note.className = "mode-note" + (on ? "" : " off");
+  note.innerHTML = on
+    ? "🔌 <b>الربط المباشر مفعّل</b> — النتائج تُسحَب من " + esc(where) +
+      (v.autoSyncOnLoad ? " وتُحدَّث تلقائياً عند فتح اللوحة." : " — اضغط «مزامنة الآن» لتحديث النتائج.") +
+      '<button class="ghost" id="syncInline" type="button">🔄 مزامنة الآن</button><span id="syncProg"></span>'
+    : "📄 الوضع اليدوي: ارفع ملف Excel ثم اضغط «تحليل وإصدار تقرير Excel» — " +
+      "أو فعّل «الربط المباشر بقاعدة البيانات» من زر ⚙️ الإعدادات لتصل النتائج من قاعدة البيانات مباشرة.";
+
+  const b = $("syncInline");
+  if (b) b.addEventListener("click", () => syncFromDb(false));
+}
+/* تعبئة النموذج من استجابة الخادم + تحديث المؤشرات والتوقيت الدوري */
+function fillSettings(v) {
+  dsView = v;
+  $("dsEnable").checked = !!v.enabled;
+  $("dsMode").value = v.mode || "app";
+  $("dsServer").value = v.server || "";
+  $("dsDatabase").value = v.database || "";
+  $("dsAuth").value = v.auth || "windows";
+  $("dsUser").value = v.userId || "";
+  $("dsPass").value = "";
+  $("dsPass").placeholder = v.hasPassword ? "محفوظة ✓ (اتركها فارغة للإبقاء عليها)" : "كلمة المرور";
+  $("dsTrust").checked = !!v.trustServerCertificate;
+  $("dsEncrypt").checked = !!v.encrypt;
+  $("dsTimeout").value = v.commandTimeoutSeconds || 300;
+  $("dsConnStr").value = v.connectionStringHint || "";
+  $("dsQuery").value = v.query || "";
+  $("dsMaxRows").value = v.maxRows || 100000;
+  $("dsReplace").checked = !!v.replaceExisting;
+  $("dsAutoLoad").checked = !!v.autoSyncOnLoad;
+  $("dsMinutes").value = v.autoSyncMinutes || 0;
+  $("dsLabel").value = v.sourceLabel || "";
+  $("dsTarget").textContent = v.appConnectionTarget || "-";
+  $("dsFile").textContent = v.settingsFile || "-";
+  dsToggle();
+  renderDsState(v.state);
+  applyMode(v);
+  scheduleAuto(v);
+  return v;
+}
+function scheduleAuto(v) {
+  clearInterval(dsAutoTimer);
+  dsAutoTimer = null;
+  if (v && v.enabled && v.autoSyncMinutes > 0) {
+    dsAutoTimer = setInterval(() => syncFromDb(true), v.autoSyncMinutes * 60000);
+  }
+}
+
+/* ---------- استدعاءات إعدادات الربط المباشر ---------- */
+async function loadSettings() {
+  try {
+    return fillSettings(await req("/api/v1/settings/direct-source"));
+  } catch (e) {
+    dsMsg("تعذّرت قراءة الإعدادات: " + e.message, "bad");
+    return null;
+  }
+}
+async function openSettings() {
+  $("dsModal").hidden = false;
+  dsMsg("");
+  dsPreview(null);
+  await loadSettings();
+}
+function closeSettings() { $("dsModal").hidden = true; }
+
+async function saveSettings(quiet) {
+  const r = await req("/api/v1/settings/direct-source",
+    Object.assign(dsJson(collectSettings()), { method: "PUT" }));
+  fillSettings(r.view);
+  if (!quiet) dsMsg("✅ " + r.message, "ok");
+  return r;
+}
+async function testSource() {
+  dsMsg("جارٍ اختبار الاتصال بالمصدر…");
+  try {
+    const r = await req("/api/v1/settings/direct-source/test", dsJson(collectSettings()));
+    dsMsg((r.ok ? "✅ " : "⛔ ") + r.message + (r.serverVersion ? " — " + r.serverVersion : "") +
+      " (" + fmt(r.elapsedMs) + " م.ث)", r.ok ? "ok" : "bad");
+  } catch (e) { dsMsg("⛔ " + e.message, "bad"); }
+}
+async function previewSource() {
+  dsMsg("جارٍ تنفيذ استعلام المعاينة…");
+  try {
+    const r = await req("/api/v1/settings/direct-source/preview?take=20", dsJson(collectSettings()));
+    dsPreview(r);
+    dsMsg((r.ok ? "✅ " : "⛔ ") + r.message + " (" + fmt(r.elapsedMs) + " م.ث)", r.ok ? "ok" : "bad");
+  } catch (e) { dsPreview(null); dsMsg("⛔ " + e.message, "bad"); }
+}
+function dsPreview(r) {
+  const box = $("dsPrev");
+  if (!r || !r.rows || !r.rows.length) { box.hidden = true; box.innerHTML = ""; return; }
+
+  const cols = r.columns.slice(0, 14);
+  let html = "<table class='prev'><thead><tr>" +
+    cols.map(c => "<th>" + esc(c) + "</th>").join("") + "</tr></thead><tbody>" +
+    r.rows.map(row => "<tr>" + cols.map(c => "<td>" + esc(trimTxt(row[c] || "", 42)) + "</td>").join("") +
+      "</tr>").join("") + "</tbody></table>";
+
+  if (r.columns.length > cols.length) {
+    html += "<div class='dsstate'>… و" + (r.columns.length - cols.length) +
+      " عموداً آخر (تُقرأ كاملة عند المزامنة).</div>";
+  }
+
+  box.innerHTML = html;
+  box.hidden = false;
+}
+/* المزامنة: سحب البيانات من المصدر ← الاستيراد ← المراجعة ← عرض الملخص في اللوحة */
+async function syncFromDb(quiet) {
+  if (dsSyncing) return;
+  dsSyncing = true;
+  const t0 = performance.now();
+  const tick = setInterval(() => {
+    const p = $("syncProg");
+    if (p) p.textContent = " ⏳ جارٍ السحب… (" + Math.round((performance.now() - t0) / 1000) + " ث)";
+  }, 800);
+
+  try {
+    dsMsg("⏳ جارٍ سحب البيانات من قاعدة المصدر ثم استيرادها ومراجعتها…");
+    const r = await req("/api/v1/settings/direct-source/sync", dsJson(collectSettings()));
+    const res = r.result || {};
+    dsMsg((res.ok ? "✅ " : "⛔ ") + res.message, res.ok ? "ok" : "bad");
+    fillSettings(r.view);
+
+    if (res.ok && res.summary) {
+      showSummary(res.summary, "قاعدة البيانات المباشرة: " + res.sourceLabel,
+        Math.round(performance.now() - t0), quiet === true);
+    }
+  } catch (e) {
+    dsMsg("⛔ " + e.message, "bad");
+  } finally {
+    clearInterval(tick);
+    const p = $("syncProg");
+    if (p) p.textContent = "";
+    dsSyncing = false;
+  }
+}
+/* تحويل ملخص قاعدة البيانات إلى نفس عرض اللوحة (KPIs + الأوراق + توزيع الأنواع) */
+function showSummary(sm, label, ms, auto) {
+  if (!sm || !sm.hasData) return;
+  show(
+    { fileName: label, rowsImported: sm.totalRequests, rowsSkipped: 0, requestTypes: sm.requestTypes || {} },
+    {
+      totalRequests: sm.totalRequests, acceptedRequests: sm.acceptedRequests,
+      employeesReviewed: sm.employeesReviewed, employeesWithViolations: sm.employeesWithViolations,
+      employeesOver4Hours: sm.employeesOver4Hours, totalArticle118bDays: sm.totalArticle118bDays,
+      employeesExceeding15Days: sm.employeesExceeding15Days, weeksOver60Minutes: sm.weeksOver60Minutes,
+      employeesOver60Minutes: sm.employeesOver60Minutes, totalWeeklyLateMinutes: sm.totalWeeklyLateMinutes,
+      totalArticle118cDays: sm.totalArticle118cDays
+    },
+    ms || 0, label, auto === true);
+}
+/* عرض آخر نتائج محفوظة في قاعدة البيانات (بلا رفع ملف ولا مزامنة) */
+async function loadDbSummary() {
+  try {
+    const sm = await req("/api/v1/departures/review-summary");
+    if (sm.hasData) showSummary(sm, sm.sourceLabel || "قاعدة البيانات (آخر نتائج محفوظة)", 0, true);
+    return sm;
+  } catch (_) { return null; }
+}
+
+/* ---------- اختيار الملف ---------- */
+const drop = $("drop"), input = $("file");
+drop.addEventListener("click", () => input.click());
+drop.addEventListener("keydown", e => {
+  if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); }
+});
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.add("over");
+}));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => {
+  e.preventDefault(); drop.classList.remove("over");
+}));
+drop.addEventListener("drop", e => {
+  const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if (f) take(f);
+});
+input.addEventListener("change", () => { if (input.files[0]) take(input.files[0]); });
+$("clear").addEventListener("click", reset);
+$("go").addEventListener("click", runAll);
+$("dl").addEventListener("click", download);
+$("dlLegal").addEventListener("click", downloadLegal);
+$("again").addEventListener("click", () => { reset(); window.scrollTo({ top: 0, behavior: "smooth" }); });
+
+/* ---------- ربط أحداث نافذة الإعدادات ---------- */
+$("gear").addEventListener("click", openSettings);
+$("dsClose").addEventListener("click", closeSettings);
+$("dsModal").addEventListener("click", e => { if (e.target.id === "dsModal") closeSettings(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("dsModal").hidden) closeSettings(); });
+$("dsMode").addEventListener("change", dsToggle);
+$("dsAuth").addEventListener("change", dsToggle);
+$("dsEnable").addEventListener("change", () => {
+  const on = $("dsEnable").checked;
+  dsMsg(on
+    ? "الربط المباشر مُعلَّم للتفعيل — اضغط «حفظ الإعدادات» ثم «مزامنة الآن وتحديث اللوحة»."
+    : "الربط المباشر مُعلَّم للتعطيل — اضغط «حفظ الإعدادات» لتأكيد التعطيل.", on ? "ok" : "");
+});
+$("dsSave").addEventListener("click", async () => {
+  try { await saveSettings(false); } catch (e) { dsMsg("⛔ " + e.message, "bad"); }
+});
+$("dsTest").addEventListener("click", testSource);
+$("dsPreview").addEventListener("click", previewSource);
+$("dsSync").addEventListener("click", async () => {
+  try { await saveSettings(true); } catch (e) { dsMsg("⛔ " + e.message, "bad"); return; }
+  await syncFromDb(false);
+});
+$("dsClearPass").addEventListener("click", async () => {
+  try {
+    const r = await req("/api/v1/settings/direct-source",
+      Object.assign(dsJson({ password: "" }), { method: "PUT" }));
+    fillSettings(r.view);
+    dsMsg("✅ تم حذف كلمة المرور المخزّنة.", "ok");
+  } catch (e) { dsMsg("⛔ " + e.message, "bad"); }
+});
+$("dsDefaultQuery").addEventListener("click", async () => {
+  try {
+    const r = await req("/api/v1/settings/direct-source/default-query");
+    $("dsQuery").value = r.query;
+  } catch (e) { dsMsg("⛔ " + e.message, "bad"); }
+});
+
+function take(f) {
+  if (busy) return;
+  if (!/\.xlsx?$/i.test(f.name)) {
+    fail("صيغة الملف غير مدعومة: «" + f.name + "» — المطلوب ملف Excel بصيغة .xlsx أو .xls.");
+    return;
+  }
+  clearErr();
+  file = f; blob = null; fileNameOut = "";
+  $("fname").textContent = f.name;
+  $("fsize").textContent = kb(f.size);
+  $("picked").hidden = false;
+  $("go").disabled = false;
+}
+function reset() {
+  file = null; blob = null; fileNameOut = "";
+  input.value = "";
+  $("picked").hidden = true;
+  $("go").disabled = true;
+  $("result").hidden = true;
+  $("kpis").innerHTML = ""; $("types").innerHTML = ""; $("json").textContent = "";
+  clearErr();
+  ["import", "review", "export"].forEach(k => step(k, "", "بانتظار البدء"));
+  if (window.APP && window.APP.shell) window.APP.shell.go("upload");   // العودة لشاشة الرفع
+}
+/* ============================================================================
+   اللوحة المركزية (المغادرات والإجازات) — مؤشرات ومخططات ثلاثية الأبعاد
+   ========================================================================== */
+function dashPct(part, whole) { return whole ? Math.round((part * 100 / whole) * 10) / 10 : 0; }
+function dashChip(t, c) { return '<span class="chip">' + t + '</span>'; }
+function dashChipK(t, c) { return '<span class="chip ' + (c || '') + '">' + t + '</span>'; }
+function dashKpiTile(cls, ico, label, value, note) {
+  return '<div class="kpi ' + cls + '"><span class="kico">' + ico + '</span><div class="v">' + value +
+    '</div><div class="l">' + label + '</div><div class="n">' + note + '</div></div>';
+}
+
+/* شرائح توزيع أنواع الطلبات (أعلى 6 أنواع + «أنواع أخرى») */
+function dashTypeSlices(imp) {
+  const P = TIME.colors;
+  const cycle = [P.info, P.purple, P.teal, P.warn, P.pink, P.ok, P.gold, P.gray];
+  const entries = Object.keys((imp && imp.requestTypes) || {})
+    .map(k => [k, imp.requestTypes[k]]).sort((a, b) => b[1] - a[1]);
+  const head = entries.slice(0, 6), rest = entries.slice(6);
+  const slices = head.map((e, i) => ({
+    label: e[0], value: e[1], color: cycle[i % cycle.length], note: classify(e[0]).label
+  }));
+  if (rest.length) {
+    slices.push({
+      label: 'أنواع أخرى (' + rest.length + ')', value: rest.reduce((a, e) => a + e[1], 0),
+      color: P.gray, note: 'أنواع طلبات أقل تكراراً في الملف'
+    });
+  }
+  const total = slices.reduce((a, s) => a + (+s.value || 0), 0);
+  slices.forEach(s => { s.pct = dashPct(s.value, total); s.share = s.pct; });
+  return slices;
+}
+
+/* شرائح حالة الموظفين: ملتزمون مقابل مخالفين */
+function dashEmpSlices(rev) {
+  const P = TIME.colors;
+  const ok = Math.max(0, (+rev.employeesReviewed || 0) - (+rev.employeesWithViolations || 0));
+  const slices = [
+    { label: 'موظفون بلا أي مخالفة', value: ok, color: P.ok, note: 'مطابقون للمادتين 118/ب و118/ج وقاعدة 15 يوماً' },
+    { label: 'موظفون لديهم مخالفات', value: rev.employeesWithViolations, color: P.bad, note: 'يستوجبون خصماً أو تسوية' }
+  ];
+  const total = slices.reduce((a, s) => a + (+s.value || 0), 0);
+  slices.forEach(s => { s.pct = dashPct(s.value, total); s.share = s.pct; });
+  return slices;
+}
+/* رسم اللوحة المركزية: يعمل مع ملف مرفوع أو نتائج قاعدة البيانات */
+function renderDash(imp, rev) {
+  window.__depDash = rev ? { imp: imp, rev: rev } : null;
+  if (typeof TIME === 'undefined') return;
+  const host = id => document.getElementById(id);
+
+  if (!rev) {
+    host('dashKpis').innerHTML = dashKpiTile('', '⏳', 'لا توجد نتائج معالجة بعد', '—',
+      'ارفع ملف تقرير المغادرات أو فعّل الربط المباشر بقاعدة البيانات من الإعدادات.');
+    host('heroMeta').innerHTML = dashChipK('لا توجد نتائج بعد', 'warn');
+    host('dashBars').innerHTML = '<div class="hint">تظهر المقارنة بعد تنفيذ المعالجة أو المزامنة من قاعدة البيانات.</div>';
+    host('typesNote').textContent = 'بانتظار ملف تقرير المغادرات لعرض توزيع أنواع الطلبات ثلاثي الأبعاد.';
+    host('empNote').textContent = 'بانتظار نتيجة المراجعة القانونية لعرض حالة الموظفين.';
+    TIME.chart('#chartTypes', { mode: 'pie', slices: [], emptyText: 'لا توجد بيانات لعرضها بعد' });
+    TIME.chart('#chartEmp', { mode: 'donut', slices: [], emptyText: 'لا توجد بيانات لعرضها بعد' });
+    return;
+  }
+
+  const violPct = dashPct(rev.employeesWithViolations, rev.employeesReviewed);
+  const compliant = Math.max(0, (+rev.employeesReviewed || 0) - (+rev.employeesWithViolations || 0));
+
+  host('dashKpis').innerHTML = [
+    dashKpiTile('info', '📨', 'الطلبات المعالجة', fmt(rev.totalRequests), 'المقبولة: ' + fmt(rev.acceptedRequests) + ' طلباً'),
+    dashKpiTile('info', '👥', 'الموظفون المراجَعون', fmt(rev.employeesReviewed), fmt(rev.employeesWithViolations) + ' لديهم مخالفات'),
+    dashKpiTile('warn', '🩺', 'أيام المادة 118/ب', fmt(rev.totalArticle118bDays), fmt(rev.employeesOver4Hours) + ' طلباً تجاوز 4 ساعات'),
+    dashKpiTile('warn', '⚖️', 'أسابيع ≥ 60 دقيقة (118/ج)', fmt(rev.weeksOver60Minutes), fmt(rev.employeesOver60Minutes) + ' موظفاً متأثراً'),
+    dashKpiTile('bad', '📉', 'أيام المادة 118/ج', fmt(rev.totalArticle118cDays), 'إجمالي التأخير ' + fmt(rev.totalWeeklyLateMinutes) + ' دقيقة'),
+    dashKpiTile(rev.employeesExceeding15Days ? 'bad' : 'ok', '🎯', 'تجاوز 15 يوماً', fmt(rev.employeesExceeding15Days), 'خصم 50% من المكافأة'),
+    dashKpiTile('ok', '✅', 'نسبة الالتزام', fmt(100 - violPct) + '%', fmt(compliant) + ' موظفاً بلا أي مخالفة')
+  ].join('');
+
+  host('heroMeta').innerHTML = [
+    dashChip('المصدر: <b>' + ((imp && imp.fileName) || 'قاعدة البيانات') + '</b>'),
+    dashChip('الصفوف: <b>' + fmt(imp && imp.rowsImported) + '</b>'),
+    dashChipK('نسبة الالتزام: <b>' + fmt(100 - violPct) + '%</b>', violPct > 50 ? 'warn' : 'ok'),
+    dashChipK('موظفون بمخالفات: <b>' + fmt(rev.employeesWithViolations) + '</b>', 'warn'),
+    dashChipK('خصم المكافأة: <b>' + fmt(rev.employeesExceeding15Days) + '</b> موظفاً', rev.employeesExceeding15Days ? 'bad' : 'ok')
+  ].join('');
+
+  const barData = [
+    ['أيام المادة 118/ب (طلب فوق 4 ساعات)', rev.totalArticle118bDays, TIME.colors.warn],
+    ['أيام المادة 118/ج (أسابيع بلغت الحد)', rev.totalArticle118cDays, TIME.colors.bad],
+    ['أسابيع ≥ 60 دقيقة', rev.weeksOver60Minutes, TIME.colors.purple],
+    ['موظفون تجاوزوا 4 ساعات', rev.employeesOver4Hours, TIME.colors.pink],
+    ['موظفون تجاوزوا 15 يوماً', rev.employeesExceeding15Days, TIME.colors.gold]
+  ];
+  const maxBar = Math.max.apply(null, barData.map(b => +b[1] || 0).concat([1]));
+  host('dashBars').innerHTML = barData.map(b => {
+    const w = Math.max(2, Math.round(((+b[1] || 0) * 100) / maxBar));
+    return '<div class="bar-row"><span>' + b[0] + '</span><span>' + fmt(b[1]) + '</span>' +
+      '<span class="bar-track"><i style="width:' + w + '%;background:' + b[2] + '"></i></span></div>';
+  }).join('');
+
+  const typeSlices = dashTypeSlices(imp);
+  TIME.chart('#chartTypes', {
+    mode: 'pie', slices: typeSlices, unit: 'طلب', tipLabel: 'عدد الطلبات', explode: 0.07, height: 300
+  });
+  const typesTotal = typeSlices.reduce((a, s) => a + (+s.value || 0), 0);
+  host('typesNote').innerHTML = 'الأنواع المعروضة: <b>' + fmt(typeSlices.length) + '</b> — إجمالي الصفوف المصنَّفة: <b>' +
+    fmt(typesTotal) + '</b>. المهمة الرسمية لا تُحتسب مخالفة، بينما تُراجع الاستئذانات والإجازات وفق المادتين 118/ب و118/ج.';
+
+  const empSlices = dashEmpSlices(rev);
+  TIME.chart('#chartEmp', {
+    mode: 'donut', hole: 0.5, slices: empSlices, unit: 'موظف', tipLabel: 'الموظفون',
+    centerValue: fmt(100 - violPct) + '%', centerLabel: 'نسبة الالتزام', height: 300
+  });
+  host('empNote').innerHTML = 'نسبة الالتزام = الموظفون بلا أي مخالفة ÷ الموظفين المراجَعين. المخالفون: <b>' +
+    fmt(rev.employeesWithViolations) + '</b> موظفاً (' + violPct + '%).';
+}
+
+/* لا حاجة لتحميل إضافي عند الدخول: البيانات تُحدَّث بالمعالجة أو المزامنة أو الفحص الدوري */
+function onScreenEnter() { }
+
+renderDash(null, null);
+
+/* ---------- الإقلاع: الإعدادات ← الربط المباشر ← الملخص من قاعدة البيانات ← الفحص الدوري ---------- */
+
+(async function boot() {
+  const v = await loadSettings();                       // يضبط شارة الوضع + ملاحظة القسم الأول
+  if (v && v.enabled && v.autoSyncOnLoad) {
+    await syncFromDb(true);                             // سحب النتائج من قاعدة البيانات مباشرة إلى اللوحة
+  }
+  if ($("result").hidden) {
+    await loadDbSummary();                              // وإلا: اعرض آخر نتائج محفوظة في قاعدة البيانات
+  }
+  loadCompliance();                                     // لوحة التزام الإدارات من قاعدة البيانات
+  poll();
+  setInterval(poll, 15000);
+})();
+</script>
+
+<script>
+/* ============================================================================
+   تشغيل اللوحة المركزية: القائمة اليمنى + الشاشات + المخططات ثلاثية الأبعاد
+   ========================================================================== */
+(function () {
+  var GROUPS = [
+    {
+      title: 'الرئيسية', items: [
+        { id: 'home', icon: '🏠', label: 'لوحة المؤشرات', hint: 'مؤشرات ومخططات ثلاثية الأبعاد', keywords: 'لوحة مركزية رئيسية dashboard' }
+      ]
+    },
+    {
+      title: 'مسار المعالجة', items: [
+        { id: 'upload', icon: '📤', label: 'رفع ملف المغادرات', hint: 'رفع تقرير المغادرات (.xlsx)', keywords: 'رفع استيراد ملف excel' },
+        { id: 'run', icon: '⚡', label: 'تنفيذ المعالجة', hint: 'استيراد ← مراجعة قانونية ← ملف Excel', keywords: 'معالجة تشغيل تحليل' },
+        { id: 'result', icon: '🧾', label: 'النتيجة الشاملة', hint: 'المؤشرات والأوراق الناتجة وتنزيل الملفات', keywords: 'نتيجة تقارير تنزيل أوراق' }
+      ]
+    },
+    {
+      title: 'التحليل والمخططات', items: [
+        { id: 'chart', icon: '📊', label: 'التزام الإدارات', hint: 'مخطط دائري ثلاثي الأبعاد لنسب الالتزام', keywords: 'مخطط التزام إدارات ثلاثي الأبعاد' }
+      ]
+    },
+    {
+      title: 'الإعدادات', items: [
+        { id: 'act-source', icon: '⚙️', label: 'الربط المباشر بقاعدة البيانات', hint: 'إعدادات مصدر البيانات والمزامنة', act: 'settings', keywords: 'إعدادات ربط مباشر قاعدة بيانات مزامنة' }
+      ]
+    },
+    {
+      title: 'الصيانة والبيانات',
+      items: [
+        { id: 'cleanup', icon: '🧹', label: 'تنظيف البيانات', hint: 'تفريغ الجداول لاستقبال بيانات جديدة', keywords: 'تنظيف حذف تفريغ مسح بيانات جديدة صيانة' }
+      ]
+    },
+    {
+      title: 'أنظمة أخرى', items: [
+        { id: 'ext-punch', icon: '🕘', label: 'الحضور والانصراف', hint: 'تحليل بصمات الحضور — المواد 7 و112 و118', href: '/punch.html' },
+        { id: 'ext-dev', icon: '🧪', label: 'لوحة المطوّرين', hint: 'كل نقاط النهاية واختبارها', href: '/console.html' }
+      ]
+    }
+  ];
+
+  window.APP = window.APP || {};
+
+  /* ============================================================================
+     منطقة تنظيف البيانات: قراءة حالة الجداول من الخدمة ثم تنفيذ التنظيف بتأكيد نصّي.
+     تُهيَّأ قبل تشغيل القشرة (shell) لتكون جاهزة عند أي دخول للشاشة — بما في ذلك
+     الروابط المباشرة (#/cleanup). وبعد نجاح التنظيف تُفرَّغ لوحة المؤشرات وتُخفى
+     شاشة «النتيجة الشاملة» (صارت بلا بيانات).
+     ========================================================================== */
+  if (typeof TIME.maintenance === 'function') {
+    window.APP.maintenance = TIME.maintenance({
+      root: 'cleanup',
+      api: '/api/v1/maintenance',
+      onDone: function () {
+        try {
+          if (typeof renderDash === 'function') renderDash(null, null);
+          var res = document.getElementById('result');
+          if (res) res.hidden = true;
+          ['kpis', 'types', 'sheets', 'sheetsLegal'].forEach(function (k) {
+            var n = document.getElementById(k);
+            if (n) n.innerHTML = '';
+          });
+          var meta = document.getElementById('meta');
+          if (meta) meta.textContent = '';
+        } catch (e) { /* تحديث الواجهة تجميلي — نتجاهل أي خطأ هنا */ }
+      }
+    });
+    window.APP.maintenance.load();
+  }
+
+  window.APP.shell = TIME.shell({
+    brand: { icon: '📁', title: 'TIME', sub: 'المغادرات والإجازات' },
+    home: 'home',
+    footNote: 'مراجعة تقرير المغادرات: الاستيراد ← المراجعة القانونية (118/ب و118/ج والمكافأة) ← تقرير Excel.',
+    groups: GROUPS,
+    onScreen: function (id) {
+      if (typeof onScreenEnter === 'function') onScreenEnter(id);
+      if (id === 'result' && document.getElementById('result').hidden) {
+        TIME.toast('لا توجد نتيجة شاملة بعد — ارفع ملف تقرير المغادرات ثم نفّذ المعالجة.', 'warn', 6000);
+      }
+      /* شاشة تنظيف البيانات: قراءة حالة الجداول عند كل دخول إليها */
+      if (id === 'cleanup' && window.APP && window.APP.maintenance) window.APP.maintenance.load();
+    },
+    onAction: function (act) {
+      if (act === 'settings') document.getElementById('gear').click();
+    }
+  });
+
+  /* زر التنظيف في الشريط العلوي — متاح من كل الشاشات */
+  var tbCleanup = document.getElementById('tbCleanup');
+  if (tbCleanup) tbCleanup.addEventListener('click', function () { window.APP.shell.go('cleanup'); });
+
+  /* أي زر في الصفحة يحمل data-goto ينتقل للشاشة المطلوبة */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-goto]') : null;
+    if (!b || b.classList.contains('rail-item')) return;
+    var id = b.getAttribute('data-goto');
+    if (id && window.APP.shell) window.APP.shell.go(id);
+  });
+
+  /* زر الإعدادات في الواجهة الترحيبية */
+  var hg = document.getElementById('heroGear');
+  if (hg) hg.addEventListener('click', function () { document.getElementById('gear').click(); });
+})();
+</script>
+</body>
+</html>

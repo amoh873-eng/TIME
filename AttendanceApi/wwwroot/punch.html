@@ -1,0 +1,2210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>تحليل بصمات الحضور والانصراف — المراجعة القانونية (المواد 7 و112 و118 + المكافأة)</title>
+<style>
+  :root{--panel:#1e293b;--panel2:#273449;--txt:#e2e8f0;--muted:#94a3b8;--line:#334155;
+        --accent:#38bdf8;--ok:#22c55e;--bad:#f87171;--warn:#fbbf24;--bg:#0b1220;--dim:#0f172a}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0f172a,#111c34 60%,#0d1729);color:var(--txt);
+       font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.65}
+  header{padding:20px 22px;border-bottom:1px solid var(--line);background:rgba(15,23,42,.92);
+         position:sticky;top:0;z-index:9;display:flex;flex-wrap:wrap;gap:12px;
+         justify-content:space-between;align-items:center}
+  h1{margin:0;font-size:20px}
+  .sub{color:var(--muted);font-size:13px;margin-top:3px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;
+        border:1px solid var(--line);background:var(--panel);font-size:13px;white-space:nowrap}
+  .dot{width:9px;height:9px;border-radius:50%;background:#64748b}
+  .dot.up{background:var(--ok);box-shadow:0 0 10px var(--ok)}
+  .dot.down{background:#ef4444}
+  main{padding:22px 16px 40px;max-width:1180px;margin:0 auto;display:grid;gap:18px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+        box-shadow:0 10px 30px rgba(2,6,23,.35)}
+  .card>h2{margin:0;padding:14px 18px;font-size:16px;background:var(--panel2);
+           border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  .num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
+       border-radius:50%;background:var(--accent);color:#06121f;font-size:14px;font-weight:800}
+  .pad{padding:18px}
+  .drop{border:2px dashed #475569;border-radius:14px;padding:30px 18px;text-align:center;
+        cursor:pointer;background:#0f1a2e;transition:.18s}
+  .drop:hover,.drop.over{border-color:var(--accent);background:#132441}
+  .drop-ico{font-size:34px}
+  .drop-t{font-weight:700;margin-top:6px}
+  .drop-s{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .picked{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:12px;padding:11px 14px;
+          border:1px solid var(--line);border-radius:12px;background:#132441}
+  .fname{font-weight:700;word-break:break-all}
+  .fsize{color:var(--muted);font-size:12.5px}
+  .ghost{margin-inline-start:auto;background:transparent;color:var(--txt);border:1px solid var(--line);
+         border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer}
+  .ghost:hover{border-color:var(--accent);color:var(--accent)}
+  .opts{margin-top:14px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:13px;color:var(--muted)}
+  .opts input[type=number]{width:90px;background:#0f1a2e;border:1px solid var(--line);border-radius:8px;
+         color:var(--txt);padding:7px 10px;font-size:13px}
+  .opts input[type=checkbox]{accent-color:var(--accent)}
+  button.primary{cursor:pointer;border:0;border-radius:10px;padding:12px 30px;font-size:15px;
+                 font-weight:700;background:var(--accent);color:#06121f;transition:.15s}
+  button.primary:hover{filter:brightness(1.08)}
+  button.primary:disabled{opacity:.55;cursor:not-allowed}
+  button.big{font-size:16px;padding:14px 40px}
+  .steps{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px}
+  .steps li{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);
+            border-radius:10px;background:#0f1a2e;font-size:13.5px}
+  .steps li i{margin-inline-start:auto;color:var(--muted);font-style:normal;font-size:12.5px}
+  .sd{width:10px;height:10px;border-radius:50%;background:#475569;flex:0 0 auto}
+  .steps li.run{border-color:var(--accent);background:#132441}
+  .steps li.run .sd{background:var(--accent);animation:pulse 1s infinite}
+  .steps li.done .sd{background:var(--ok)}
+  .steps li.fail{border-color:#7f1d1d;background:#2a1115}
+  .steps li.fail .sd{background:#ef4444}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+  .err{margin-top:14px;padding:12px 14px;border:1px solid #7f1d1d;background:#2a1115;border-radius:10px;
+       color:#fecaca;font-size:13.5px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px}
+  .kpi{border:1px solid var(--line);border-radius:13px;padding:13px 15px;background:#0f1a2e}
+  .kpi .v{font-size:25px;font-weight:800;line-height:1.25}
+  .kpi .l{color:var(--muted);font-size:12.5px;margin-top:2px}
+  .kpi .n{color:#64748b;font-size:11.5px;margin-top:4px}
+  .kpi.ok .v{color:var(--ok)}.kpi.warn .v{color:var(--warn)}.kpi.bad .v{color:var(--bad)}
+  .kpi.info .v{color:var(--accent)}
+  .acts{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px;
+        padding-top:16px;border-top:1px dashed var(--line)}
+  .acts .ghost{margin-inline-start:0}
+  .meta{color:var(--muted);font-size:12.5px}
+  .sheets{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;margin-top:14px}
+  .sheet{border:1px solid var(--line);border-radius:11px;padding:10px 13px;background:#132441;font-size:13px}
+  .sheet b{display:block;font-size:13.5px}
+  .sheet span{color:var(--muted);font-size:12px}
+  h3.sec{margin:18px 0 4px;font-size:14px;color:var(--accent)}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+  th{color:var(--muted);font-weight:600;font-size:12.5px}
+  tbody tr:nth-child(even){background:#0f1a2e}
+  td.n{font-variant-numeric:tabular-nums;font-weight:700}
+  td.bad{color:var(--bad);font-weight:700}
+  .scroll{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:11px;padding:0 10px 6px}
+  .hint{color:var(--muted);font-size:12.5px;margin-top:10px}
+  .src{color:var(--muted);font-size:12.5px;margin-top:6px}
+  /* ---- قائمة التنقل الرئيسية (قائمة جديدة للحضور والانصراف) ---- */
+  .topnav{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+          padding:10px 16px;background:rgba(9,15,28,.96);border-bottom:1px solid var(--line)}
+  .topnav a{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border-radius:999px;
+            border:1px solid var(--line);background:var(--panel);color:var(--txt);
+            text-decoration:none;font-size:13px;transition:.15s}
+  .topnav a:hover{border-color:var(--accent);color:var(--accent)}
+  .topnav a.active{background:var(--accent);color:#06121f;border-color:var(--accent);font-weight:700}
+  .topnav .navhint{margin-inline-start:auto;color:var(--muted);font-size:12px}
+  /* ---- قائمة التقارير ---- */
+  .repgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(285px,1fr));gap:12px;margin-top:12px}
+  .rep{border:1px solid var(--line);border-radius:13px;padding:13px 15px;background:#0f1a2e;
+       display:flex;flex-direction:column;gap:7px}
+  .rep b{font-size:13.8px}
+  .rep p{margin:0;color:var(--muted);font-size:12.4px;line-height:1.6}
+  .rep .rule{color:#7dd3fc;font-size:11.8px}
+  .rep .cnt{font-variant-numeric:tabular-nums;font-weight:800;font-size:20px}
+  .rep .cnt.zero{color:#64748b}
+  .rep .btns{display:flex;gap:8px;margin-top:auto;padding-top:8px}
+  .rep .btns button{border:0;border-radius:9px;padding:7px 13px;font-size:12.5px;cursor:pointer;font-weight:600}
+  .rep .btns .view{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  .rep .btns .view:hover{border-color:var(--accent);color:var(--accent)}
+  .rep .btns .dl{background:var(--accent);color:#06121f}
+  .filters{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px;font-size:13px;color:var(--muted)}
+  .filters input,.filters select{background:#0f1a2e;border:1px solid var(--line);border-radius:8px;
+        color:var(--txt);padding:7px 10px;font-size:13px}
+  .filters input[type=date]{width:150px}
+  .filters input[type=number]{width:110px}
+  /* ---- تقويم العطل ---- */
+  .holform{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:12px}
+  .holform label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--muted)}
+  .holform input,.holform select,.holform textarea{background:#0f1a2e;border:1px solid var(--line);
+        border-radius:8px;color:var(--txt);padding:8px 10px;font-size:13px;font-family:inherit}
+  .holform textarea{min-height:96px;grid-column:1/-1;line-height:1.7}
+  .holbtns{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .holbtns button{cursor:pointer;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:600;
+        border:1px solid var(--line);background:transparent;color:var(--txt)}
+  .holbtns button:hover{border-color:var(--accent);color:var(--accent)}
+  .holbtns button.primary{background:var(--accent);color:#06121f;border-color:var(--accent)}
+  .holform label.chk{flex-direction:row;align-items:center;gap:8px;background:#0f1a2e;border:1px solid var(--line);
+        border-radius:8px;padding:9px 11px}
+  .holform label.chk input{accent-color:var(--accent)}
+  .tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;border:1px solid var(--line)}
+  .tag.o{background:#132441;color:#93c5fd}
+  .tag.i{background:#132a1f;color:#86efac}
+  .tag.c{background:#2a1f2e;color:#f0abfc}
+  .tag.n{background:#2a2417;color:#fcd34d}
+  .tag.x{background:#2a1115;color:#fecaca}
+  .del{border:1px solid #7f1d1d;background:transparent;color:#fecaca;border-radius:8px;
+       padding:4px 11px;font-size:12px;cursor:pointer}
+  .del:hover{background:#2a1115}
+  .msg{margin-top:10px;padding:10px 13px;border-radius:10px;font-size:13px;border:1px solid var(--line);background:#132441}
+  .msg.ok{border-color:#166534;color:#bbf7d0}
+  .msg.bad{border-color:#7f1d1d;color:#fecaca}
+</style>
+<link rel="stylesheet" href="/assets/shell.css?v=1" />
+</head>
+<body>
+<aside class="rail" id="rail" aria-label="القائمة الرئيسية"></aside>
+<div class="scrim" id="scrim"></div>
+<div class="shell-body">
+<header class="topbar">
+  <button class="iconbtn burger" id="burger" type="button" aria-label="إظهار القائمة">☰</button>
+  <div class="tb-title">
+    <div class="tt" id="tbTitle">لوحة المؤشرات التنفيذية</div>
+    <div class="ts" id="tbSub">تحليل بصمات الحضور والانصراف — المواد 7 و112 و118/ب و118/ج + قاعدة الـ 15 يوماً للمكافأة</div>
+  </div>
+  <div class="crumb" id="crumb"></div>
+  <div class="tb-tools">
+    <button class="iconbtn danger" id="tbCleanup" type="button" title="تنظيف كافة البيانات الحالية لاستقبال بيانات جديدة">🧹 تنظيف البيانات</button>
+    <span class="clock" id="clock"></span>
+    <span class="pill" title="حالة الاتصال بالخدمة وقاعدة البيانات"><span class="dot" id="dot"></span><span id="apiState">جارٍ التحقق من الاتصال…</span></span>
+  </div>
+</header>
+
+<main class="shell-main">
+  <!-- ================= شاشة 0: اللوحة المركزية للمؤشرات (ثلاثية الأبعاد) ================= -->
+  <section class="screen" data-screen="home">
+
+    <div class="hero">
+      <h2>لوحة مؤشرات الحضور والانصراف</h2>
+      <div class="hs">نظرة تنفيذية واحدة على نتائج التحليل القانوني: البصمات المُعالجة، المخالفات، العمل الإضافي والتصاريح، والدوام المرن —
+        وفق المواد 7 و112 و118/ب و118/ج وقاعدة الـ 15 يوماً للمكافأة. استخدم القائمة الجانبية أو
+        <span class="kbd">Ctrl</span> + <span class="kbd">K</span> للتنقّل السريع بين الشاشات.</div>
+      <div class="hrow">
+        <button class="iconbtn primary" type="button" data-goto="upload">📤 رفع ملف بصمات جديد</button>
+        <button class="iconbtn" type="button" id="heroReanalyze">🔄 إعادة التحليل الآن</button>
+        <button class="iconbtn" type="button" data-goto="reportsSection">🧾 قائمة التقارير</button>
+        <button class="iconbtn" type="button" data-goto="workTimeSection">⏱ العمل الإضافي والتصاريح</button>
+        <button class="iconbtn danger" type="button" data-goto="cleanup">🧹 تنظيف البيانات لاستقبال ملف جديد</button>
+      </div>
+      <div class="hmeta" id="heroMeta"></div>
+    </div>
+
+    <div class="kpis" id="dashKpis"></div>
+
+    <div class="grid g-2">
+      <section class="card chartcard">
+        <h2>🥧 توزيع أيام فترة التحليل <span class="tagline">مخطط دائري ثلاثي الأبعاد</span></h2>
+        <div class="cbody">
+          <div class="stage">
+            <span class="stage-cap">قرص مُجسَّم بعمق وظل منظور</span>
+            <canvas id="chartDays" aria-label="توزيع أيام فترة التحليل"></canvas>
+            <div class="tipbox"></div>
+          </div>
+          <div class="legend" data-legend></div>
+        </div>
+        <div class="pad tight"><div class="chart-note" id="daysNote"></div></div>
+      </section>
+
+      <section class="card chartcard">
+        <h2>⏱ مصير دقائق الدوام خارج الدوام الرسمي <span class="tagline">مخطط حلقي ثلاثي الأبعاد</span></h2>
+        <div class="cbody">
+          <div class="stage">
+            <span class="stage-cap">إجمالي الدقائق خارج الدوام</span>
+            <canvas id="chartOvertime" aria-label="مصير دقائق العمل الإضافي"></canvas>
+            <div class="tipbox"></div>
+          </div>
+          <div class="legend" data-legend></div>
+        </div>
+        <div class="pad tight"><div class="chart-note" id="overtimeNote"></div></div>
+      </section>
+    </div>
+
+    <div class="grid g-2">
+      <section class="card">
+        <h2>🚨 أبرز مؤشرات المخالفات <span class="tagline">مقارنة بصرية سريعة</span></h2>
+        <div class="pad tight">
+          <div class="bars" id="dashBars"></div>
+          <div class="actrow">
+            <button class="ghost" type="button" data-goto="violations">عرض المخالفات المرصودة ←</button>
+            <button class="ghost" type="button" data-goto="kpi">المؤشرات التنفيذية الكاملة ←</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card chartcard">
+        <h2>👥 حالة الموظفين <span class="tagline">ملتزمون مقابل مخالفين</span></h2>
+        <div class="cbody">
+          <div class="stage">
+            <span class="stage-cap">نسبة الالتزام العامة</span>
+            <canvas id="chartCompliance" aria-label="حالة الموظفين مقابل المخالفات"></canvas>
+            <div class="tipbox"></div>
+          </div>
+          <div class="legend" data-legend></div>
+        </div>
+        <div class="pad tight"><div class="chart-note" id="complianceNote"></div></div>
+      </section>
+    </div>
+  </section>
+
+
+  <section class="card screen" data-screen="upload">
+    <h2><span class="num">1</span> رفع ملف «تقرير الحضور والانصراف» (البصمات الخام)</h2>
+    <div class="pad">
+      <div class="drop" id="drop">
+        <div class="drop-ico">📄</div>
+        <div class="drop-t">اسحب ملف Excel هنا أو اضغط للاختيار</div>
+        <div class="drop-s">الصيغة المدعومة: .xlsx — الأعمدة: الرقم الوظيفي، الإسم، التاريخ، حالة التحضير، توقيت الحضور، مكان الحضور، توقيت الإنصراف، الإدارة</div>
+        <input type="file" id="file" accept=".xlsx" hidden />
+      </div>
+      <div class="picked" id="picked" hidden>
+        <span id="fname" class="fname"></span>
+        <span id="fsize" class="fsize"></span>
+        <button class="ghost" id="clear">إزالة</button>
+      </div>
+      <div class="opts">
+        <label><input type="checkbox" id="replace" checked /> استبدال بيانات المرحلة السابقة</label>
+        <label>حدّ السماح الصباحي (دقيقة) — القيمة من «إعدادات المادة 118/ج»: <input type="number" id="grace" value="15" min="0" max="120" /></label>
+      </div>
+      <ul class="steps" id="steps">
+        <li id="st1"><span class="sd"></span><b>رفع الملف إلى جدول المرحلة</b><i>StagingPunchRecords</i></li>
+        <li id="st2"><span class="sd"></span><b>التحليل القانوني وتخزين النتائج</b><i>يومي + أسبوعي + شهري</i></li>
+        <li id="st3"><span class="sd"></span><b>توليد التقارير القانونية</b><i>16 ورقة Excel + تقويم العطل</i></li>
+      </ul>
+      <div class="acts">
+        <button class="primary big" id="run" disabled>معالجة الملف وإخراج النتائج</button>
+        <button class="ghost" id="reload">تحديث المؤشرات</button>
+      </div>
+      <div class="err" id="err" hidden></div>
+      <div class="src" id="src"></div>
+    </div>
+  </section>
+
+  <!-- ======= شاشة: تنظيف البيانات (تفريغ الجداول لاستقبال بيانات جديدة) ======= -->
+  <section class="card screen" data-screen="cleanup" id="cleanup">
+    <h2>🧹 تنظيف البيانات واستقبال بيانات جديدة <span class="tagline">حذف نهائي — بتأكيد نصّي</span></h2>
+    <div class="pad">
+      <div class="dz">
+        <div class="dz-warn">
+          <span class="i">⚠️</span>
+          <span>
+            <b>عملية حذف نهائي.</b> تُفرَّغ جداول قاعدة البيانات <code>AttendanceAudit</code> ولا يمكن استرجاع الصفوف بعد التنفيذ —
+            خُذ نسخة احتياطية إن كنت تحتاج البيانات الحالية. لا يُحذف هيكل الجداول ولا الـ Views ولا الإجراءات المخزّنة ولا ملفات الإعدادات.
+            راجع القائمة أدناه لتعرف بالضبط ما سيُحذف وما سيبقى.
+          </span>
+        </div>
+
+        <div class="dz-scope">
+          <label class="dz-opt">
+            <input type="radio" name="dzScope" value="data" checked />
+            <span>
+              <b>بيانات التشغيل والتحليل (موصى به)</b>
+              <i>البصمات الخام ونتائج التحليل اليومية والأسبوعية والشهرية، والورديات، وتقرير المغادرات ومراجعته، والتصاريح، والعقوبات، وسجلّات التشغيل — مع الإبقاء على الموظفين والإدارات والعطل وأنواع الإجازات وإعدادات المنظومة.</i>
+            </span>
+          </label>
+          <label class="dz-opt">
+            <input type="radio" name="dzScope" value="all" />
+            <span>
+              <b>مسح شامل (كل شيء من الصفر)</b>
+              <i>ما سبق + البيانات المرجعية: الموظفون، الإدارات، الفئات الوظيفية، جداول الدوام، أنواع الإجازات، العطل الرسمية — وأي جدول آخر موجود في قاعدة البيانات.</i>
+            </span>
+          </label>
+        </div>
+
+        <div class="dz-opts">
+          <label><input type="checkbox" id="dzRule" /> إعادة إعدادات المادة 118/ج إلى القيم الافتراضية (appsettings.json)</label>
+        </div>
+
+        <div class="dz-bar">
+          <button class="ghost" id="dzRefresh" type="button">🔄 تحديث العدّادات</button>
+          <span class="dz-sum" id="dzSum">جارٍ قراءة حالة قاعدة البيانات…</span>
+        </div>
+
+        <div class="dz-tablewrap">
+          <table class="dz-table">
+            <thead><tr><th>الجدول والوصف</th><th>عدد الصفوف</th><th>الإجراء</th></tr></thead>
+            <tbody id="dzTbody"></tbody>
+          </table>
+        </div>
+
+        <div class="dz-confirm">
+          <label for="dzConfirm">لتنفيذ التنظيف اكتب كلمة <b>حذف</b> في الحقل ثم اضغط الزر (حماية من الحذف بالخطأ):</label>
+          <input id="dzConfirm" type="text" autocomplete="off" spellcheck="false" placeholder="حذف" />
+          <div class="dz-actions">
+            <button class="dz-run" id="dzRun" type="button" disabled>🧹 تنظيف كافة البيانات الآن</button>
+            <button class="ghost" id="dzDry" type="button">🔍 معاينة بلا حذف</button>
+            <button class="ghost" type="button" data-goto="upload">📤 الانتقال إلى رفع ملف جديد</button>
+          </div>
+        </div>
+
+        <div class="err" id="dzErr" hidden></div>
+        <div class="dz-done" id="dzResult" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="kpi">
+    <h2><span class="num">2</span> المؤشرات التنفيذية للنتائج القانونية</h2>
+    <div class="pad">
+      <div class="kpis" id="kpis"></div>
+      <div class="acts">
+        <button class="primary" id="download" disabled>⬇ تنزيل التقارير القانونية (16 ورقة)</button>
+        <span class="meta" id="runAt"></span>
+      </div>
+      <div class="sheets" id="sheetList"></div>
+      <div class="hint" id="sheetsHint">الملف يضم أوراقاً مستقلة: الملخص التنفيذي، دليل القواعد، التأخير الصباحي (المادة 7)، المخالفات اليومية، المتأخرون 60 دقيقة (118/ج)، الاستئذان فوق 4 ساعات (118/ب)، الغياب غير المبرّر، نقص بصمة الانصراف، رصيد الإجازة السنوية، خصم المكافأة (15 يوماً)، الإجازة المرضية (المادة 112)، التزام الإدارات، كشف الخصومات المُجمَّع، تقويم العطل الرسمية والدينية، الدوام في العطل ونهاية الأسبوع، والمنهجية وجودة البيانات. ولتنزيل كل تقرير على حدة استخدم «قائمة تقارير الحضور والانصراف» أدناه.</div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="quality">
+    <h2><span class="num">3</span> جودة بيانات الملف (توزيع الحالات كما وردت)</h2>
+    <div class="pad">
+      <div class="kpis" id="quality"></div>
+      <h3 class="sec">توزيع حالات التحضير في الملف</h3>
+      <div class="scroll"><table id="statusTable">
+        <thead><tr><th>الحالة كما وردت في النظام</th><th>عدد الصفوف</th></tr></thead>
+        <tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="violations">
+    <h2><span class="num">4</span> أبرز المخالفات المرصودة</h2>
+    <div class="pad">
+      <h3 class="sec">أعلى أيام المخالفات (تأخير / انصراف مبكر / مغادرة أثناء الدوام / غياب)</h3>
+      <div class="scroll"><table id="dailyTable"><thead><tr>
+        <th>الرقم الوظيفي</th><th>الموظف</th><th>الإدارة</th><th>التاريخ</th><th>الحالة</th><th>حضور</th><th>انصراف</th>
+        <th>تأخير</th><th>انصراف مبكر</th><th>مغادرة</th><th>غياب عن الدوام</th>
+      </tr></thead><tbody></tbody></table></div>
+
+      <h3 class="sec" id="weeklySecTitle">أسابيع بلغت 60 دقيقة — دمج التأخير الصباحي مع الانصراف المبكر (المادة 118/ج)</h3>
+      <div class="hint" id="weeklySecHint">يُدمج (التأخير الصباحي + الانصراف المبكر + المغادرة أثناء الدوام) في ناتج أسبوعي واحد، والناتج المحتسب لا يزيد عن 60 دقيقة في الأسبوع (ما زاد على السقف لا يُحتسب).</div>
+      <div class="scroll"><table id="weeklyTable"><thead><tr>
+        <th>الرقم الوظيفي</th><th>الموظف</th><th>بداية الأسبوع</th><th>نهاية الأسبوع</th>
+        <th>تأخير صباحي</th><th>انصراف مبكر</th><th>مغادرة</th><th>المجموع الفعلي</th><th id="thWeeklyCounted">الناتج المحتسب (≤ 60)</th><th id="thWeeklyDeduction">الخصم (أيام)</th>
+      </tr></thead><tbody></tbody></table></div>
+
+      <h3 class="sec">عقوبات المادة 7 (التأخير الصباحي المتكرر)</h3>
+      <div class="scroll"><table id="monthlyTable"><thead><tr>
+        <th>الرقم الوظيفي</th><th>الموظف</th><th>الشهر</th><th>أيام التأخير</th><th>الإجراء التأديبي</th>
+        <th>أيام حسم الراتب</th><th>أيام الغياب</th><th>أيام 118/ب</th><th>أيام 118/ج</th>
+      </tr></thead><tbody></tbody></table></div>
+
+      <h3 class="sec">التزام الإدارات والمديريات</h3>
+      <div class="scroll"><table id="complianceTable"><thead><tr>
+        <th>الترتيب</th><th>الإدارة / المديرية</th><th>الموظفون</th><th>الملتزمون</th><th>المخالفون</th>
+        <th>نسبة الالتزام</th><th>أيام 118/ب</th><th>أيام 118/ج</th><th>أيام الغياب</th><th>إجمالي أيام الحسم</th>
+      </tr></thead><tbody></tbody></table></div>
+
+      <div class="hint">تُعرض أعلى 15 حالة في كل جدول؛ والتفاصيل الكاملة لكل الموظفين في ملف التقارير القانونية.</div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="reportsSection" id="reportsSection">
+    <h2><span class="num">5</span> 🧾 قائمة تقارير الحضور والانصراف (Excel) — قائمة جديدة مستقلة</h2>
+    <div class="pad">
+      <div class="filters">
+        <label>من تاريخ <input type="date" id="fFrom" /></label>
+        <label>إلى تاريخ <input type="date" id="fTo" /></label>
+        <label>الرقم الوظيفي <input type="text" id="fJob" placeholder="اتركه فارغاً للكل" /></label>
+        <label>سقف الصفوف في ملف Excel <input type="number" id="fMax" value="0" min="0" step="500" /></label>
+        <button class="ghost" id="repRefresh" type="button">تحديث القائمة</button>
+        <span class="meta" id="repRange"></span>
+      </div>
+      <div class="repgrid" id="repList"></div>
+
+      <h3 class="sec">معاينة التقرير المحدّد</h3>
+      <div class="hint" id="prevTitle">اختر «معاينة» من أي تقرير أعلاه لعرض أول صفوفه هنا.</div>
+      <div class="scroll"><table id="prevTable"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="calendarSection" id="calendarSection">
+    <h2><span class="num">6</span> 🗓️ تقويم العطل الرسمية والدينية المعتمدة في التحليل</h2>
+    <div class="pad">
+      <div class="kpis" id="calKpis"></div>
+
+      <h3 class="sec">إضافة عطلة أو استبعاد عطلة</h3>
+      <div class="holform">
+        <label>التاريخ <input type="date" id="hDate" /></label>
+        <label>اسم العطلة / المناسبة <input type="text" id="hName" placeholder="مثال: عيد الاستقلال" /></label>
+        <label>نوع العطلة
+          <select id="hKind">
+            <option value="1" selected>رسمية (عامة)</option>
+            <option value="2">دينية إسلامية</option>
+            <option value="3">دينية مسيحية</option>
+            <option value="4">مناسبة وطنية</option>
+          </select>
+        </label>
+        <label>قائمة عطل نصية — سطر لكل عطلة بالصيغة: التاريخ | الاسم | النوع
+          <textarea id="hBulk" spellcheck="false" placeholder="2024-12-25 | عيد الميلاد المجيد | دينية مسيحية&#10;2025-01-01 | رأس السنة الميلادية | رسمية"></textarea>
+        </label>
+      </div>
+      <div class="holbtns">
+        <button class="primary" id="hAdd" type="button">➕ اعتماد العطلة</button>
+        <button id="hBulkAdd" type="button">➕ إضافة القائمة النصية</button>
+        <button id="hImport" type="button">📥 استيراد تقويم من Excel</button>
+        <input type="file" id="hFile" accept=".xlsx" hidden />
+        <button id="hDefaults" type="button">♻ استعادة كتالوج النظام (2023 — 2025)</button>
+        <button id="hExport" type="button">⬇ تنزيل تقويم العطل (Excel)</button>
+      </div>
+      <div class="msg" id="holMsg" hidden></div>
+
+      <h3 class="sec">العطل المعتمدة في التحليل</h3>
+      <div class="scroll"><table id="holTable">
+        <thead><tr>
+          <th>التاريخ</th><th>اليوم</th><th>اسم العطلة / المناسبة</th><th>النوع</th><th>المصدر</th>
+          <th>موظفون دوّموا</th><th>دقائق العمل</th><th>إجراء</th>
+        </tr></thead><tbody></tbody></table></div>
+      <div class="hint">أي يوم عطلة (نهاية أسبوع أو عطلة رسمية/دينية) لا يُحتسب غياباً ولا مخالفة، ويُعرض الدوام فيه للعلم (ساعات إضافية محتملة). استبعاد عطلة من كتالوج النظام يُسجَّل ولا يمكن استعادته إلا بزر «استعادة كتالوج النظام».</div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="weeklyRuleSection" id="weeklyRuleSection">
+    <h2><span class="num">7</span> ⚖ إعدادات قاعدة المادة 118/ج (مرنة — بلا إعادة تشغيل الخدمة)</h2>
+    <div class="pad">
+      <div class="kpis" id="wrKpis"></div>
+      <div class="hint">تُحفظ القيم في ملف <span id="wrFile">—</span> بجوار التطبيق وتُطبَّق على التحليل التالي فوراً. القيم الافتراضية تبقى في <b>appsettings.json</b> ويُعاد إليها بزر «إعادة الافتراضي».</div>
+
+      <h3 class="sec">قيم القاعدة</h3>
+      <div class="holform">
+        <label>حدّ الدقائق الأسبوعي (المادة 118/ج) <input type="number" id="wrThreshold" min="1" max="720" step="5" /></label>
+        <label>سقف الناتج المحتسب (0 = يتبع الحدّ) <input type="number" id="wrCap" min="0" max="1440" step="5" /></label>
+        <label>أيام الخصم عن كل أسبوع مخالف <input type="number" id="wrDays" min="0" max="30" step="0.25" /></label>
+        <label>حدّ السماح الصباحي — المادة 7 <input type="number" id="wrGrace" min="0" max="240" step="1" /></label>
+        <label>حدود إدارات خاصة — سطر لكل إدارة بصيغة: الاسم = الدقائق
+          <textarea id="wrDepts" spellcheck="false" placeholder="إدارة الموارد البشرية = 90&#10;مديرية الشؤون القانونية = 120"></textarea>
+        </label>
+      </div>
+
+      <h3 class="sec">خيارات القاعدة</h3>
+      <div class="holform">
+        <label class="chk"><input type="checkbox" id="wrEnabled" /> تفعيل القاعدة الأسبوعية (إلغاء التفعيل يوقف التجميع والخصم)</label>
+        <label class="chk"><input type="checkbox" id="wrCapOn" /> تقييد الناتج المحتسب بسقف أعلى</label>
+        <label class="chk"><input type="checkbox" id="wrStrict" /> المخالفة عند <b>تجاوز</b> الحدّ فقط (بدل بلوغه)</label>
+        <label class="chk"><input type="checkbox" id="wrEarly" /> دمج الانصراف المبكر في الناتج الأسبوعي</label>
+        <label class="chk"><input type="checkbox" id="wrGaps" /> دمج المغادرة أثناء الدوام في الناتج</label>
+        <label class="chk"><input type="checkbox" id="wrCounted" /> اعتماد الناتج المحتسب في الملخص الشهري</label>
+      </div>
+
+      <div class="holbtns">
+        <button class="primary" id="wrSave" type="button">💾 حفظ الإعدادات</button>
+        <button id="wrPreview" type="button">🔍 معاينة الأثر قبل الحفظ</button>
+        <button id="wrReset" type="button">♻ إعادة الافتراضي (appsettings)</button>
+        <button id="wrReanalyze" type="button">🔄 إعادة التحليل الآن</button>
+      </div>
+      <div class="msg" id="wrMsg" hidden></div>
+
+      <div id="wrPreviewBox" hidden>
+        <h3 class="sec">أثر الإعدادات المرشّحة (مقارنة المخزَّن الحالي بالمتوقّع — بلا أي تعديل)</h3>
+        <div class="kpis" id="wrPreviewKpis"></div>
+        <div class="scroll"><table id="wrPreviewTable"><thead><tr>
+          <th>الرقم الوظيفي</th><th>الموظف</th><th>الإدارة</th><th>بداية الأسبوع</th><th>المجموع الفعلي</th>
+          <th>المحتسب الحالي</th><th>الخصم الحالي</th><th>المحتسب المتوقّع</th><th>الخصم المتوقّع</th>
+        </tr></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </section>
+  <section class="card screen" data-screen="shiftSection" id="shiftSection">
+    <h2><span class="num">8</span> 👮 جدول الورديات الشهري (الحراسة وبقية الإدارات ذات الورديات) والاستثناءات الخاصة</h2>
+    <div class="pad">
+      <div class="kpis" id="shKpis"></div>
+      <div class="hint">
+        يعمل نظام الورديات على أساس <b>جدول شهري</b> يصدره مسؤول الورديات: نزّل القالب، عبّئ رمز الوردية في خانة كل يوم
+        (ن = نهار، ل = ليل، ر = راحة، 24 = وردية 24 ساعة، إجازة، عطلة رسمية، دورة)، ثم استورد الملف هنا.
+        تُحتسب أيام العاملين بالورديات من الجدول لا من أوقات الدوام الرسمي (08:30 — 15:30)، ويُعفون من المادة 118/ج
+        والتأخير الصباحي وفق الإعدادات أدناه، ويُطبَّق ذلك على التحليل التالي. وبالمثل تُدار <b>الاستثناءات الخاصة</b>
+        لعدة مديريات (إعفاء من 118/ج أو التأخير أو الانصراف أو الغياب، أو حدّ أسبوعي مختلف).
+      </div>
+
+      <h3 class="sec">استيراد الجدول الشهري</h3>
+      <div class="holform">
+        <label>شهر الجدول <input type="month" id="shMonth" /></label>
+        <label>إدارة القالب (اختياري) <input type="text" id="shDept" placeholder="الحراسة" /></label>
+        <label class="chk"><input type="checkbox" id="shReplace" checked /> استبدال كل قيود الفترة المستوردة (بدل قيود الموظفين نفسهم فقط)</label>
+      </div>
+      <div class="holbtns">
+        <button id="shTemplate" type="button">⬇ تنزيل قالب الجدول الشهري</button>
+        <button class="primary" id="shImportBtn" type="button">📥 استيراد جدول الورديات (.xlsx)</button>
+        <input type="file" id="shFile" accept=".xlsx" hidden />
+        <button id="shExport" type="button">📄 تنزيل الجدول المستورد</button>
+        <button id="shRefresh" type="button">🔄 تحديث الجدول</button>
+        <button id="shReanalyze" type="button">⚙ إعادة التحليل بالجدول</button>
+      </div>
+      <div class="msg" id="shMsg" hidden></div>
+
+      <h3 class="sec">دفعات الاستيراد</h3>
+      <div class="scroll"><table id="shBatchTable"><thead><tr>
+        <th>الفترة</th><th>الملف</th><th>من</th><th>إلى</th><th>القيود</th><th>الموظفون</th>
+        <th>ورديات</th><th>راحة</th><th>إجازات</th><th>الصيغة</th><th>وقت الاستيراد</th><th>إجراء</th>
+      </tr></thead><tbody></tbody></table></div>
+
+      <h3 class="sec">عيّنة من قيود الجدول (الأحدث)</h3>
+      <div class="scroll"><table id="shEntryTable"><thead><tr>
+        <th>الرقم الوظيفي</th><th>الموظف</th><th>الإدارة</th><th>التاريخ</th><th>اليوم</th>
+        <th>الرمز</th><th>التصنيف</th><th>الساعات</th>
+      </tr></thead><tbody></tbody></table></div>
+
+      <h3 class="sec">إعدادات نظام الورديات والاستثناءات الخاصة (قابلة للتغيير في وقت التشغيل)</h3>
+      <div class="holform">
+        <label>طول الوردية (ساعة) <input type="number" id="shCycle" min="1" max="24" step="1" /></label>
+        <label>سماح تأخير يوم الوردية (دقيقة) <input type="number" id="shGrace" min="0" max="240" step="5" /></label>
+        <label>إدارات الورديات — سطر لكل إدارة (تُعامل بنظام الورديات تلقائياً)
+          <textarea id="shDepartments" spellcheck="false" placeholder="الحراسة&#10;الأمن&#10;الدفاع المدني"></textarea>
+        </label>
+        <label>استثناءات إدارات/مديريات خاصة — سطر لكل إدارة بصيغة:
+          الاسم = ورديات، إعفاء118ج، إعفاءالتأخير، إعفاءالانصراف، إعفاءالغياب، حدّ=90، سقف=120، سبب=...
+          <textarea id="shExceptions" spellcheck="false" placeholder="مديرية الشؤون القانونية = إعفاء118ج، إعفاءالتأخير، سبب=طبيعة العمل&#10;مديرية الحراسة = ورديات، إعفاء118ج&#10;دائرة الاتصالات = حدّ=90"></textarea>
+        </label>
+      </div>
+      <div class="holform">
+        <label class="chk"><input type="checkbox" id="shEnabled" /> تفعيل نظام الورديات (الاحتساب من الجدول الشهري)</label>
+        <label class="chk"><input type="checkbox" id="shExWeekly" /> إعفاء العاملين بالورديات من المادة 118/ج</label>
+        <label class="chk"><input type="checkbox" id="shExLate" /> إعفاء العاملين بالورديات من التأخير الصباحي (المادة 7)</label>
+        <label class="chk"><input type="checkbox" id="shExEarly" /> إعفاء العاملين بالورديات من الانصراف المبكر</label>
+        <label class="chk"><input type="checkbox" id="shRestNoAbsence" /> أيام الراحة/العطل في الجدول لا تُحتسب غياباً</label>
+        <label class="chk"><input type="checkbox" id="shMissingExempt" /> يوم بلا قيد في الجدول = مستثنى من القواعد العامة</label>
+        <label class="chk"><input type="checkbox" id="shMissingAbsence" /> وردية بلا بصمة حضور = غياب (بدل الاكتفاء بالملاحظة)</label>
+      </div>
+      <div class="holbtns">
+        <button class="primary" id="shSave" type="button">💾 حفظ إعدادات الورديات والاستثناءات</button>
+        <button id="shRuleReset" type="button">♻ إعادة كل الإعدادات للافتراضي</button>
+      </div>
+      <div class="hint" id="shRuleSummary"></div>
+    </div>
+  </section>
+
+  <section class="card screen" data-screen="workTimeSection" id="workTimeSection">
+    <h2><span class="num">9</span> ⏱ الدوام المرن والعمل الإضافي (حسب قانون الخدمة المدنية — قابل للتخصيص)</h2>
+    <div class="pad">
+      <div class="kpis" id="wtKpis"></div>
+      <div class="hint">
+        <b>الدوام المرن:</b> يُسمح للموظف المصرَّح له بالحضور داخل نافذة معتمدة (افتراضياً 07:30 — 09:30)
+        وإكمال ساعات دوامه اليومية، فتتحرّك نهاية دوامه بقدر تأخّره، فلا يُحتسب عليه تأخير صباحي داخل النافذة
+        ويُحتسب عليه النقص إن خرج قبل إكمال ساعاته. لا يُطبَّق إلا على من صُرِّح له (القوائم أو التصاريح أدناه).<br />
+        <b>العمل الإضافي:</b> تُحتسب المدة بعد نهاية الدوام (أو بعد نهاية الدوام المرن) للموظفين المصرَّح لهم،
+        بحدّ أعلى يومي وشهري وأقل مدة تُحتسب، مع نسب تعويض (عادي/نهاية أسبوع/عطلة) لحساب <b>الساعات المعادلة</b>،
+        مع إجمالي الساعات الإضافية طوال الشهر لكل موظف.<br />
+        تُحفظ القيم في ملف <span id="wtFile">—</span> وتُطبَّق على التحليل التالي فوراً (الافتراضي في appsettings.json).
+      </div>
+
+      <h3 class="sec">حدود العمل الإضافي ونسب التعويض</h3>
+      <div class="holform">
+        <label>الحدّ الأعلى اليومي (دقيقة) <input type="number" id="wtMaxDay" min="0" max="720" step="15" /></label>
+        <label>الحدّ الأعلى الشهري (دقيقة — 0 = بلا سقف) <input type="number" id="wtMaxMonth" min="0" max="24000" step="60" /></label>
+        <label>أقل مدة تُحتسب في اليوم (دقيقة) <input type="number" id="wtMinDay" min="0" max="720" step="15" /></label>
+        <label>تدوير الدقائق (0 = بلا تدوير) <input type="number" id="wtRound" min="0" max="60" step="5" /></label>
+        <label>نسب التعويض: عادي / نهاية أسبوع / عطلة <input type="text" id="wtRates" placeholder="1 / 1.5 / 2" /></label>
+        <label>إدارات مصرَّح لها بالعمل الإضافي — سطر لكل إدارة
+          <textarea id="wtDepts" spellcheck="false" placeholder="الحراسة&#10;الصيانة"></textarea>
+        </label>
+        <label>أرقام وظيفية مصرَّح لها بالعمل الإضافي — سطر لكل رقم وظيفي
+          <textarea id="wtEmps" spellcheck="false" placeholder="10023&#10;10547"></textarea>
+        </label>
+      </div>
+      <div class="holform">
+        <label class="chk"><input type="checkbox" id="wtOn" /> تفعيل احتساب العمل الإضافي</label>
+        <label class="chk"><input type="checkbox" id="wtCompLate" /> خصم دقائق التأخير الصباحي من إضافي اليوم (تعويض التأخّر)</label>
+        <label class="chk"><input type="checkbox" id="wtEarly" /> احتساب الحضور قبل بدء الدوام إضافياً</label>
+        <label class="chk"><input type="checkbox" id="wtWeekend" /> احتساب الدوام في نهاية الأسبوع إضافياً</label>
+        <label class="chk"><input type="checkbox" id="wtHoliday" /> احتساب الدوام في العطل الرسمية والدينية إضافياً</label>
+        <label class="chk"><input type="checkbox" id="wtRequire" /> اشتراط موافقة مسبقة (تصريح ساري/قائمة معتمدة) — <b>مُفعَّل افتراضياً: لا يُحتسب أي عمل إضافي بلا موافقة مسبقة</b></label>
+      </div>
+      <div class="hint">عمل إضافي بلا موافقة مسبقة لا يُحتسب، ويظهر في اليومي/الشهري كمدة <b>معلَّقة بانتظار تصريح</b> للتدقيق.</div>
+
+      <h3 class="sec">نافذة الدوام المرن</h3>
+      <div class="holform">
+        <label>أبكر وقت حضور <input type="time" id="flEarliest" /></label>
+        <label>آخر وقت حضور <input type="time" id="flLatest" /></label>
+        <label>الدقائق المطلوب إكمالها يومياً (0 = مدة الدوام الرسمي) <input type="number" id="flDaily" min="0" max="720" step="15" /></label>
+        <label>إدارات الدوام المرن — سطر لكل إدارة
+          <textarea id="flDepts" spellcheck="false" placeholder="الاتصالات&#10;تقنية المعلومات"></textarea>
+        </label>
+        <label>أرقام وظيفية للدوام المرن — سطر لكل رقم وظيفي
+          <textarea id="flEmps" spellcheck="false" placeholder="10023"></textarea>
+        </label>
+      </div>
+      <div class="holform">
+        <label class="chk"><input type="checkbox" id="flOn" /> تفعيل الدوام المرن</label>
+        <label class="chk"><input type="checkbox" id="flRequire" /> اشتراط تصريح/قائمة لتطبيقه (بدون ذلك لا يُطبَّق على أحد)</label>
+        <label class="chk"><input type="checkbox" id="flEarlyOt" /> احتساب الحضور المبكر داخل نافذة المرونة إضافياً</label>
+      </div>
+      <div class="holbtns">
+        <button class="primary" id="wtSave" type="button">💾 حفظ إعدادات الدوام المرن والعمل الإضافي</button>
+        <button id="wtReset" type="button">♻ إعادة الافتراضي (appsettings)</button>
+        <button id="wtReanalyze" type="button">⚙ إعادة التحليل الآن</button>
+        <button id="apSync" type="button">📤 ترحيل ساعات الإضافي الشهرية إلى سجل العمل الإضافي</button>
+      </div>
+      <div class="hint" id="wtSummary"></div>
+      <div class="msg" id="wtMsg" hidden></div>
+
+      <h3 class="sec">تصاريح العمل الإضافي والدوام المرن للموظفين (الموظفون المسموح لهم)</h3>
+      <div class="holform">
+        <label>الرقم الوظيفي <input type="text" id="apJob" /></label>
+        <label>الإدارة (اختياري) <input type="text" id="apDept" /></label>
+        <label>من تاريخ <input type="date" id="apFrom" /></label>
+        <label>إلى تاريخ <input type="date" id="apTo" /></label>
+        <label>النوع
+          <select id="apKind">
+            <option value="overtime">عمل إضافي</option>
+            <option value="flexible">دوام مرن</option>
+          </select>
+        </label>
+        <label>حدّ التصريح اليومي (ساعة — 0 = الإعدادات) <input type="number" id="apPerDay" min="0" max="12" step="0.5" /></label>
+        <label>إجمالي التصريح (ساعة — 0 = السقف الشهري) <input type="number" id="apTotal" min="0" max="400" step="1" /></label>
+        <label>ملاحظة/سند التصريح <input type="text" id="apNote" /></label>
+      </div>
+      <div class="holbtns">
+        <button class="primary" id="apSave" type="button">➕ إضافة/تحديث التصريح</button>
+        <button id="apClear" type="button">🧹 تفريغ الحقول</button>
+        <input type="hidden" id="apId" value="0" />
+      </div>
+      <div class="holform">
+        <label>إضافة تصاريح من قائمة نصية — سطر لكل تصريح:
+          الرقم الوظيفي | من | إلى | ساعات/يوم | إجمالي الساعات | النوع (إضافي/مرن) | ملاحظة
+          <textarea id="apBulkText" spellcheck="false" placeholder="10023 | 2026-01-01 | 2026-01-31 | 3 | 30 | إضافي | تكليف كتابي 12/2026&#10;10547 | 2026-01-01 | 2026-06-30 |  |  | مرن | موافقة الدوام المرن"></textarea>
+        </label>
+      </div>
+      <div class="holbtns">
+        <button id="apBulk" type="button">📋 استيراد القائمة النصية</button>
+        <button id="apRefresh" type="button">🔄 تحديث التصاريح</button>
+      </div>
+
+      <h3 class="sec">التصاريح المسجّلة</h3>
+      <div class="scroll"><table id="apTable"><thead><tr>
+        <th>النوع</th><th>الرقم الوظيفي</th><th>الموظف</th><th>الإدارة</th><th>من</th><th>إلى</th><th>الأيام</th>
+        <th>حدّ يومي (دقيقة)</th><th>إجمالي (دقيقة)</th><th>ساري؟</th><th>المصدر</th><th>ملاحظة</th><th>إجراء</th>
+      </tr></thead><tbody></tbody></table></div>
+    </div>
+  </section>
+</main>
+
+<footer class="shellfoot">
+  TIME — نظام الحضور والانصراف «تحليل بصمات الحضور والانصراف» | الواجهة تعمل محلياً دون إنترنت ·
+  <b>Ctrl</b> + <b>K</b> لبحث سريع في القائمة · <b>Alt</b> + <b>↑/↓</b> للتنقل بين الشاشات
+</footer>
+</div><!-- /shell-body -->
+
+<script src="/assets/shell.js?v=1"></script>
+<script>
+const API = '/api/v1/punch';
+const $ = (id) => document.getElementById(id);
+const el = {
+  dot: $('dot'), apiState: $('apiState'), drop: $('drop'), file: $('file'), picked: $('picked'),
+  fname: $('fname'), fsize: $('fsize'), clear: $('clear'), replace: $('replace'), grace: $('grace'),
+  run: $('run'), reload: $('reload'), err: $('err'), src: $('src'), kpis: $('kpis'), quality: $('quality'),
+  runAt: $('runAt'), download: $('download'), sheetList: $('sheetList')
+};
+
+let current = null;
+
+function fmt(n) { return (n === null || n === undefined) ? '—' : Number(n).toLocaleString('en-US'); }
+function kb(b) { return (b / 1024 / 1024).toFixed(2) + ' MB'; }
+function showErr(msg) { el.err.hidden = false; el.err.textContent = msg; }
+function clearErr() { el.err.hidden = true; el.err.textContent = ''; }
+function setApi(up, text) { el.dot.className = 'dot ' + (up ? 'up' : 'down'); el.apiState.textContent = text; }
+function step(id, state) { $(id).className = state || ''; }
+function kpi(label, value, note, cls) {
+  return `<div class="kpi ${cls || ''}"><div class="v">${value}</div><div class="l">${label}</div>${note ? `<div class="n">${note}</div>` : ''}</div>`;
+}
+function rows(tableId, data, cells) {
+  const tb = $(tableId).querySelector('tbody');
+  tb.innerHTML = data.length
+    ? data.map(r => '<tr>' + cells(r).map(c => `<td class="${c.cls || ''}">${c.v}</td>`).join('') + '</tr>').join('')
+    : '<tr><td colspan="12" style="color:var(--muted)">لا توجد بيانات مطابقة.</td></tr>';
+}
+
+// ---- قسم 1: اختيار الملف ----
+el.drop.addEventListener('click', () => el.file.click());
+el.drop.addEventListener('dragover', e => { e.preventDefault(); el.drop.classList.add('over'); });
+el.drop.addEventListener('dragleave', () => el.drop.classList.remove('over'));
+el.drop.addEventListener('drop', e => {
+  e.preventDefault(); el.drop.classList.remove('over');
+  if (e.dataTransfer.files.length) { el.file.files = e.dataTransfer.files; onPick(); }
+});
+el.file.addEventListener('change', onPick);
+el.clear.addEventListener('click', () => { el.file.value = ''; current = null; el.picked.hidden = true; el.run.disabled = true; });
+
+function onPick() {
+  const f = el.file.files[0];
+  if (!f) return;
+  if (!f.name.toLowerCase().endsWith('.xlsx')) { showErr('الصيغة المدعومة هي .xlsx فقط.'); return; }
+  clearErr(); current = f;
+  el.fname.textContent = f.name;
+  el.fsize.textContent = kb(f.size);
+  el.picked.hidden = false;
+  el.run.disabled = false;
+}
+
+// ---- قسم 1: المعالجة الكاملة (رفع ← تحليل ← تقارير) ----
+el.run.addEventListener('click', async () => {
+  if (!current) return;
+  clearErr();
+  ['st1', 'st2', 'st3'].forEach(id => step(id, ''));
+  el.run.disabled = true;
+
+  try {
+    step('st1', 'run');
+    const fd = new FormData();
+    fd.append('file', current, current.name);
+    const imp = await fetch(`${API}/import?replace=${el.replace.checked}`, { method: 'POST', body: fd });
+    if (!imp.ok) throw new Error('فشل الرفع: ' + await imp.text());
+    const impRes = await imp.json();
+    step('st1', 'done');
+
+    step('st2', 'run');
+    const grace = Math.max(0, Math.min(120, parseInt(el.grace.value || '15', 10)));
+    const an = await fetch(`${API}/analyze?graceMinutes=${grace}`, { method: 'POST' });
+    if (!an.ok) throw new Error('فشل التحليل: ' + await an.text());
+    const anRes = await an.json();
+    step('st2', 'done');
+
+    step('st3', 'run');
+    await refresh();
+    step('st3', 'done');
+    el.download.disabled = false;
+    renderImport(impRes);
+    if (window.APP && window.APP.shell) window.APP.shell.go('home');   // العودة للوحة المركزية بعد المعالجة
+    TIME.toast('✅ تمت المعالجة والتحليل — راجع المخططات الثلاثية الأبعاد في لوحة المؤشرات.', 'ok', 6500);
+  } catch (ex) {
+    ['st1', 'st2', 'st3'].forEach(id => { if ($(id).className === 'run') step(id, 'fail'); });
+    showErr(ex.message);
+  } finally {
+    el.run.disabled = false;
+  }
+});
+
+function renderImport(imp) {
+  el.src.innerHTML = `الملف: <b>${imp.fileName}</b> — الصفوف: <b>${fmt(imp.rowsImported)}</b>، الموظفون: <b>${fmt(imp.employees)}</b>، الفترة: <b>${imp.firstDate} → ${imp.lastDate}</b>` +
+    (imp.rowsSkipped ? `، صفوف متجاهَلة: ${fmt(imp.rowsSkipped)}` : '');
+}
+
+el.reload.addEventListener('click', refresh);
+el.download.addEventListener('click', () => { window.location.href = `${API}/export-legal-reports`; });
+
+// ---- أقسام 2 و3 و4: تحميل المؤشرات ----
+async function refresh() {
+  try {
+    const [staging, summary] = await Promise.all([
+      fetch(`${API}/staging-summary`).then(r => r.json()),
+      fetch(`${API}/summary`).then(r => r.json())
+    ]);
+    setApi(true, 'الاتصال بقاعدة البيانات سليم');
+    renderQuality(staging);
+    renderKpis(summary);
+    el.download.disabled = !summary.hasData;
+    if (summary.hasData) {
+      await Promise.all([loadDaily(), loadWeekly(), loadMonthly(), loadCompliance()]);
+    }
+    await Promise.all([loadReports(), loadCalendar(), loadWeeklyRule(), loadShifts()]);
+  } catch (ex) {
+    setApi(false, 'تعذّر الاتصال بالخدمة');
+    showErr('تعذّر تحميل المؤشرات: ' + ex.message);
+  }
+}
+
+function renderQuality(s) {
+  el.quality.innerHTML =
+    kpi('صفوف البصمات في المرحلة', fmt(s.totalRows), 'StagingPunchRecords', 'info') +
+    kpi('الموظفون في الملف', fmt(s.employees), s.sourceFile || '', 'info') +
+    kpi('الفترة', s.firstDate ? `${s.firstDate} → ${s.lastDate}` : '—', 'الفترة الفعلية في الملف') +
+    kpi('آخر استيراد', s.lastImportUtc ? new Date(s.lastImportUtc + 'Z').toLocaleString('en-GB') : '—', 'بتوقيت الجهاز');
+
+  const list = Object.entries(s.statusCounts || {}).sort((a, b) => b[1] - a[1]);
+  rows('statusTable', list, ([k, v]) => [{ v: k }, { v: fmt(v), cls: 'n' }]);
+}
+
+function renderKpis(s) {
+  if (!s.hasData) {
+    el.kpis.innerHTML = '<div class="kpi"><div class="v">—</div><div class="l">لا توجد نتائج محلَّلة بعد — ارفع ملف البصمات وشغّل المعالجة.</div></div>';
+    el.runAt.textContent = '';
+    renderDashboard(null);
+    return;
+  }
+  el.kpis.innerHTML =
+    kpi('الموظفون المُحلَّلون', fmt(s.employeesAnalyzed), `${fmt(s.recordsAnalyzed)} صف بصمات`, 'info') +
+    kpi('أيام العمل المحتسبة', fmt(s.workingDays), `مكتملة ${fmt(s.completeDays)} | بلا انصراف ${fmt(s.incompleteDays)}`) +
+    kpi('أيام الغياب غير المبرّر', fmt(s.absentDays), `منها ${fmt(s.absentDaysOnWeekend)} في أيام العطل`, 'bad') +
+    kpi('أيام العطل الرسمية والدينية (مستثناة)', fmt(s.holidayDays), `تقويم العطل: ${fmt(s.calendarHolidays)} يوماً`, 'ok') +
+    kpi('أيام نهاية الأسبوع (مستثناة)', fmt(s.weekendDays), 'لا تُحتسب غياباً ولا مخالفة', 'ok') +
+    kpi('دوام فعلي في العطل / نهاية الأسبوع', `${fmt(s.holidayWorkDays)} / ${fmt(s.weekendWorkDays)}`, 'للعلم فقط (ساعات إضافية محتملة)', 'info') +
+    kpi('ساعات العمل الإضافي المحتسبة', fmt(s.overtimeHours), `${fmt(s.overtimeDays)} يوماً — ${fmt(s.overtimeEmployees)} موظفاً`, s.overtimeHours ? 'ok' : '') +
+    kpi('معلَّق بانتظار تصريح إضافي', fmt(s.overtimeNeedsApprovalMinutes) + ' دقيقة',
+      `${fmt(s.overtimeNeedsApprovalDays)} يوماً فيها عمل خارج الدوام بلا موافقة مسبقة`, s.overtimeNeedsApprovalMinutes ? 'warn' : '') +
+    kpi('الساعات المعادلة (بنسب التعويض)', fmt(s.equivalentOvertimeHours), `دقائق مستبعدة وفق الحدود: ${fmt(s.overtimeExcludedMinutes)}`, 'info') +
+    kpi('أيام الدوام المرن', fmt(s.flexibleDays), `${fmt(s.flexibleEmployees)} موظفاً — ${fmt(s.flexibleMinutes)} دقيقة مرونة`, s.flexibleDays ? 'info' : '') +
+    kpi('أيام بلا بيانات (مستثناة)', fmt(s.noDataDays), 'سجلات ناقصة في النظام') +
+    kpi('أيام التأخير المحتسبة (المادة 7)', fmt(s.lateIncidentDays), `حدّ السماح ${s.morningGraceMinutes} دقيقة`, 'warn') +
+    kpi('إجمالي دقائق التأخير الصباحي', fmt(s.totalLatenessMinutes), `+ ${fmt(s.totalEarlyDepartureMinutes)} دقيقة انصراف مبكر`, 'warn') +
+    kpi('إجمالي دقائق المغادرة أثناء الدوام', fmt(s.totalMidDayGapMinutes), 'فجوات بين جلسات البصمة', 'warn') +
+    kpi('الناتج الأسبوعي المحتسب (118/ج)', fmt(s.totalWeeklyLateMinutes),
+      weeklyRuleNote() || 'دمج التأخير الصباحي + الانصراف المبكر أسبوعياً', 'bad') +
+    kpi('موظفون بعقوبة المادة 7', fmt(s.employeesWithArticle7Penalty), `${fmt(s.totalArticle7SalaryDays)} يوم حسم راتب`, 'bad') +
+    kpi(`أسابيع ${weeklyRuleReachedText()} (118/ج)`, fmt(s.weeksOver60Minutes),
+      `${fmt(s.employeesOver60Minutes)} موظفاً | خصم ${fmt(s.totalArticle118cDays)} يوم | ${weeklyRuleScopeNote()}`, 'bad') +
+    kpi('أيام تجاوزت 4 ساعات (118/ب)', fmt(s.daysOver4Hours), `${fmt(s.employeesOver4Hours)} موظفاً | خصم ${fmt(s.totalArticle118bDays)} يوم من الرصيد`, 'bad') +
+    kpi('إجمالي أيام حسم الراتب', fmt(s.totalSalaryDeductionDays), 'الغياب + المادة 7', 'bad') +
+    kpi('شهور مستحقة لخصم المكافأة', `${s.totalBonusDeductionPercent}%`, 'تجاوز 15 يوماً غياباً شهرياً', 'bad') +
+    kpi('موظفون لديهم مخالفات', fmt(s.employeesWithViolations), `من ${fmt(s.employeesAnalyzed)} موظفاً`, 'warn');
+
+  el.runAt.textContent = 'آخر تحليل: ' + new Date(s.runAtUtc + 'Z').toLocaleString('en-GB');
+
+  el.sheetList.innerHTML = [
+    ['الملخص التنفيذي', 'مؤشرات كاملة للفترة'],
+    ['دليل القواعد القانونية', 'العتبات والأثر القانوني'],
+    ['التأخير الصباحي — المادة 7', `${fmt(s.employeesWithArticle7Penalty)} موظفاً بعقوبة`],
+    ['المخالفات اليومية', 'تفاصيل كل يوم مخالف'],
+    [weeklySheetTitle(), `${fmt(s.weeksOver60Minutes)} أسبوعاً | ${weeklyRuleSheetNote()}`],
+    ['الاستئذان فوق 4 ساعات — 118/ب', `${fmt(s.daysOver4Hours)} يوماً`],
+    ['الغياب غير المبرّر', `${fmt(s.absentDays)} يوماً`],
+    ['نقص بصمة الانصراف', `${fmt(s.incompleteDays)} يوماً للتسوية`],
+    ['رصيد الإجازة السنوية', 'أيام 118/ب و118/ج'],
+    ['خصم المكافأة — 15 يوماً', 'نسبة الخصم 50%'],
+    ['الإجازة المرضية — 112', 'الشرائح 120/240/360'],
+    ['التزام الإدارات', 'الترتيب ونسب الالتزام'],
+    ['كشف الخصومات المُجمَّع', 'لكل موظف على حدة'],
+    ['تقويم العطل الرسمية والدينية', `${fmt(s.calendarHolidays)} يوماً معتمداً`],
+    ['الدوام في العطل ونهاية الأسبوع', `${fmt(s.holidayWorkDays + s.weekendWorkDays)} يوماً`],
+    ['المنهجية وجودة البيانات', 'القواعد والقيود']
+  ].map(([t, s2]) => `<div class="sheet"><b>${t}</b><span>${s2}</span></div>`).join('');
+
+  renderDashboard(s);          // تحديث اللوحة المركزية: المؤشرات والمخططات ثلاثية الأبعاد
+}
+
+function statusLabel(s) {
+  return ({ 1: 'مكتملة', 2: 'غير مكتملة', 3: 'غياب', 4: 'لا بيانات', 5: 'عطلة أسبوع', 6: 'عطلة رسمية',
+            7: 'إجازة سنوية', 8: 'إجازة مرضية', 9: 'إجازة تعويضية', 10: 'إجازة وفاة', 11: 'استئذان طارئ',
+            12: 'استئذان طبي', 13: 'مهمة رسمية', 14: 'انتداب', 15: 'تدريب', 16: 'دوام في عطلة الأسبوع',
+            17: 'دوام في عطلة رسمية', 18: 'وردية دوام (الجدول الشهري)', 19: 'راحة (جدول الورديات)',
+            20: 'إجازة (جدول الورديات)', 21: 'عطلة (جدول الورديات)', 22: 'دورة/مهمة (جدول الورديات)' })[s] || 'غير معروفة';
+}
+
+async function loadDaily() {
+  const p = await fetch(`${API}/daily?onlyViolations=true&pageSize=15`).then(r => r.json());
+  rows('dailyTable', p.items, d => ([
+    { v: d.jobNumber }, { v: d.employeeName || '—' }, { v: d.departmentName || '—' },
+    { v: d.workDate }, { v: statusLabel(d.status), cls: d.status === 3 ? 'bad' : '' },
+    { v: d.clockIn || '—' }, { v: d.clockOut || '—' },
+    { v: d.latenessMinutes || '—', cls: d.latenessMinutes ? 'n' : '' },
+    { v: d.earlyDepartureMinutes || '—', cls: d.earlyDepartureMinutes ? 'n' : '' },
+    { v: d.gapMinutes || '—', cls: d.gapMinutes ? 'n' : '' },
+    { v: d.absenceMinutes || '—', cls: d.absenceMinutes > 240 ? 'bad' : 'n' }
+  ]));
+}
+
+async function loadWeekly() {
+  const p = await fetch(`${API}/weekly?onlyViolations=true&pageSize=15`).then(r => r.json());
+  rows('weeklyTable', p.items, w => ([
+    { v: w.jobNumber }, { v: w.employeeName || '—' }, { v: w.weekStart }, { v: w.weekEnd },
+    { v: w.latenessMinutes, cls: 'n' }, { v: w.earlyDepartureMinutes, cls: 'n' },
+    { v: w.gapMinutes || '—', cls: 'n' }, { v: w.totalMinutes, cls: 'n' },
+    { v: w.countedMinutes, cls: 'bad' }, { v: w.deductionDays, cls: 'bad' }
+  ]));
+}
+
+async function loadMonthly() {
+  const p = await fetch(`${API}/monthly?onlyViolations=true&pageSize=15`).then(r => r.json());
+  rows('monthlyTable', p.items, m => ([
+    { v: m.jobNumber }, { v: m.employeeName || '—' }, { v: `${m.year}/${String(m.month).padStart(2, '0')}` },
+    { v: m.lateIncidents, cls: m.lateIncidents >= 3 ? 'bad' : 'n' },
+    { v: m.penaltyText || 'لا إجراء' }, { v: m.article7SalaryDeductionDays || '—', cls: 'n' },
+    { v: m.absentDays || '—', cls: m.absentDays ? 'bad' : 'n' },
+    { v: m.article118bDays || '—', cls: 'n' }, { v: m.article118cDays || '—', cls: 'n' }
+  ]));
+}
+
+async function loadCompliance() {
+  const items = await fetch(`${API}/compliance-by-department`).then(r => r.json());
+  rows('complianceTable', items.slice(0, 15), c => ([
+    { v: c.rank }, { v: c.administration }, { v: c.employees, cls: 'n' },
+    { v: c.compliantEmployees, cls: 'n' }, { v: c.violatingEmployees, cls: c.violatingEmployees ? 'bad' : 'n' },
+    { v: c.compliancePercent + '%', cls: c.compliancePercent < 50 ? 'bad' : 'n' },
+    { v: c.article118bDays || '—', cls: 'n' }, { v: c.article118cDays || '—', cls: 'n' },
+    { v: c.absentDays || '—', cls: 'n' }, { v: c.totalSalaryDeductionDays || '—', cls: 'n' }
+  ]));
+}
+
+// ===================== قسم 5: قائمة تقارير الحضور والانصراف =====================
+
+function filterQuery(extra) {
+  const p = new URLSearchParams();
+  const from = $('fFrom').value, to = $('fTo').value, job = $('fJob').value.trim();
+  if (from) p.set('from', from);
+  if (to) p.set('to', to);
+  if (job) p.set('jobNumber', job);
+  if (extra) Object.entries(extra).forEach(([k, v]) => p.set(k, v));
+  return p.toString();
+}
+
+async function loadReports() {
+  const list = await fetch(`${API}/reports`).then(r => r.json());
+  $('repList').innerHTML = list.map(r => `
+    <div class="rep">
+      <b>${r.title}</b>
+      <div class="cnt ${r.rows ? '' : 'zero'}">${fmt(r.rows)}</div>
+      <p>${r.description}</p>
+      <div class="rule">⚖ ${r.rule}</div>
+      <div class="btns">
+        <button class="view" data-act="prev" data-key="${r.key}">👁 معاينة</button>
+        <button class="dl" data-act="dl" data-key="${r.key}">⬇ تنزيل Excel</button>
+      </div>
+    </div>`).join('');
+  $('repRange').textContent = `الفترة: ${$('fFrom').value || 'البداية'} → ${$('fTo').value || 'النهاية'}`;
+}
+
+async function previewReport(key) {
+  const p = await fetch(`${API}/reports/${key}/preview?pageSize=25&${filterQuery()}`).then(r => r.json());
+  $('prevTitle').innerHTML = `<b>${p.title}</b> — ${p.subtitle} <span class="meta">(${fmt(p.rows.length)} من ${fmt(p.total)} صفاً)</span>`;
+  $('prevTable').querySelector('thead').innerHTML =
+    '<tr>' + p.columns.map(c => `<th>${c}</th>`).join('') + '</tr>';
+  rows('prevTable', p.rows, arr => arr.map(v => ({
+    v: (v === null || v === undefined || v === '') ? '—' : String(v)
+  })));
+}
+
+function exportReport(key) {
+  const max = Math.max(0, parseInt($('fMax').value || '0', 10));
+  window.location.href = `${API}/reports/${key}/export?${filterQuery({ maxRows: max })}`;
+}
+
+$('repList').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]');
+  if (!b) return;
+  if (b.dataset.act === 'prev') {
+    previewReport(b.dataset.key).catch(ex => showErr('تعذّرت المعاينة: ' + ex.message));
+  } else {
+    exportReport(b.dataset.key);
+  }
+});
+
+$('repRefresh').addEventListener('click', () => {
+  clearErr();
+  Promise.all([loadReports(), loadCalendar()]).catch(ex => showErr('تعذّر التحديث: ' + ex.message));
+});
+
+// ===================== قسم 6: تقويم العطل الرسمية والدينية =====================
+
+function kindTag(kind, text) {
+  const cls = { 1: 'o', 2: 'i', 3: 'c', 4: 'n' }[kind] || 'o';
+  return `<span class="tag ${cls}">${text}</span>`;
+}
+
+function holMsg(text, ok) {
+  const box = $('holMsg');
+  box.hidden = false;
+  box.className = 'msg' + (ok === undefined ? '' : ok ? ' ok' : ' bad');
+  box.textContent = text;
+}
+
+async function loadCalendar() {
+  const c = await fetch(`${API}/calendar`).then(r => r.json());
+  $('calKpis').innerHTML =
+    kpi('أيام العطل الرسمية والدينية', fmt(c.totalHolidays),
+      `${fmt(c.officialHolidays)} رسمية | ${fmt(c.islamicHolidays)} إسلامية | ${fmt(c.christianHolidays)} مسيحية`, 'info') +
+    kpi('عطلة نهاية الأسبوع', (c.weekendDays || []).join(' و '), 'مستثناة من الغياب والمخالفات') +
+    kpi('عطل مسجّلة في قاعدة البيانات', fmt(c.databaseHolidays), 'قابلة للإضافة والاستبعاد') +
+    kpi('عطل مستبعدة (ملغاة)', fmt(c.cancelledHolidays), 'تُستعاد بزر كتالوج النظام',
+      c.cancelledHolidays ? 'warn' : '') +
+    kpi('الكتالوج المدمج', c.useBuiltInCatalog ? 'مُفعّل' : 'مُعطّل',
+      `العطل المدمجة: ${c.catalogFrom} → ${c.catalogTo}`, c.useBuiltInCatalog ? 'ok' : 'warn');
+
+  const list = (c.holidays || []).filter(h => !h.isCancelled);
+  rows('holTable', list, h => ([
+    { v: h.dateText },
+    { v: h.dayName },
+    { v: h.name },
+    { v: kindTag(h.kind, h.kindText) },
+    { v: h.source || '—' },
+    { v: fmt(h.punchedEmployees), cls: h.punchedEmployees ? 'n' : '' },
+    { v: fmt(h.workedMinutes), cls: h.workedMinutes ? 'n' : '' },
+    { v: `<button class="del" data-date="${h.dateText.replace(/\//g, '-')}">استبعاد</button>` }
+  ]));
+}
+
+async function postJson(url, body) {
+  holMsg('جارٍ التنفيذ…');
+  try {
+    const r = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const j = await r.json().catch(() => ({}));
+    holMsg(j.message || (r.ok ? 'تم التنفيذ.' : 'تعذّر التنفيذ.'), r.ok);
+    if (r.ok) {
+      await Promise.all([loadCalendar(), loadReports()]);
+    }
+  } catch (ex) {
+    holMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+}
+
+$('hAdd').addEventListener('click', () => {
+  const date = $('hDate').value;
+  const name = $('hName').value.trim();
+  if (!date || !name) { holMsg('التاريخ واسم العطلة مطلوبان.', false); return; }
+  postJson(`${API}/calendar/holidays`, { date, name, kind: parseInt($('hKind').value, 10) })
+    .then(() => { $('hName').value = ''; });
+});
+
+$('hBulkAdd').addEventListener('click', () => {
+  const text = $('hBulk').value.trim();
+  if (!text) { holMsg('القائمة النصية فارغة.', false); return; }
+  postJson(`${API}/calendar/holidays/bulk`, { text }).then(() => { $('hBulk').value = ''; });
+});
+
+$('hDefaults').addEventListener('click', () => postJson(`${API}/calendar/holidays/defaults`, {}));
+
+$('hExport').addEventListener('click', () => { window.location.href = `${API}/calendar/export`; });
+
+$('hImport').addEventListener('click', () => $('hFile').click());
+
+$('hFile').addEventListener('change', async () => {
+  const f = $('hFile').files[0];
+  if (!f) return;
+  holMsg('جارٍ استيراد تقويم العطل…');
+  try {
+    const fd = new FormData();
+    fd.append('file', f, f.name);
+    const r = await fetch(`${API}/calendar/holidays/import`, { method: 'POST', body: fd });
+    const j = await r.json().catch(() => ({}));
+    holMsg(j.message || (r.ok ? 'تم الاستيراد.' : 'تعذّر الاستيراد.'), r.ok);
+    if (r.ok) {
+      await Promise.all([loadCalendar(), loadReports()]);
+    }
+  } catch (ex) {
+    holMsg('تعذّر الاتصال: ' + ex.message, false);
+  } finally {
+    $('hFile').value = '';
+  }
+});
+
+$('holTable').addEventListener('click', async e => {
+  const b = e.target.closest('button.del');
+  if (!b) return;
+  holMsg('جارٍ استبعاد العطلة…');
+  try {
+    const r = await fetch(`${API}/calendar/holidays/${b.dataset.date}`, { method: 'DELETE' });
+    const j = await r.json().catch(() => ({}));
+    holMsg(j.message || (r.ok ? 'تم الاستبعاد.' : 'تعذّر الاستبعاد.'), r.ok);
+    if (r.ok) {
+      await Promise.all([loadCalendar(), loadReports()]);
+    }
+  } catch (ex) {
+    holMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+// ===================== قسم 7: إعدادات المادة 118/ج (مرنة) =====================
+
+let weeklyRule = null;
+
+function ruleThreshold() { return (weeklyRule && weeklyRule.thresholdMinutes) || 60; }
+function ruleCap() {
+  if (!weeklyRule || !weeklyRule.capCountedMinutes) return 0;
+  return weeklyRule.capMinutes > 0 ? weeklyRule.capMinutes : ruleThreshold();
+}
+function ruleDaysText() {
+  const d = weeklyRule ? Number(weeklyRule.deductionDaysPerWeek) : 1;
+  return (isNaN(d) ? 1 : d).toLocaleString('en-US', { maximumFractionDigits: 2 });
+}
+function weeklyRuleReachedText() {
+  return weeklyRule && weeklyRule.violationWhenExceededOnly
+    ? `تجاوزت ${ruleThreshold()} دقيقة`
+    : `بلغت ${ruleThreshold()} دقيقة`;
+}
+function weeklyRuleScopeNote() {
+  return ruleCap() ? `الناتج ≤ ${ruleCap()} دقيقة/أسبوع` : 'بلا تقييد للناتج المحتسب';
+}
+function weeklyRuleNote() {
+  if (!weeklyRule) return '';
+  if (!weeklyRule.enabled) return 'قاعدة 118/ج معطّلة من الإعدادات';
+  return `دمج التأخير الصباحي${weeklyRule.mergeEarlyDeparture ? ' + الانصراف المبكر' : ''}` +
+    `${weeklyRule.mergeMidDayGaps ? ' + المغادرة' : ''} | حدّ ${ruleThreshold()} دقيقة/أسبوع | خصم ${ruleDaysText()} يوم`;
+}
+function weeklyRuleSheetNote() { return ruleCap() ? `الناتج ≤ ${ruleCap()} دقيقة` : 'المجموع الفعلي'; }
+function weeklySheetTitle() { return `المتأخرون ${ruleThreshold()} دقيقة — 118/ج`; }
+
+function sheetsHintText() {
+  return 'الملف يضم أوراقاً مستقلة: الملخص التنفيذي، دليل القواعد، التأخير الصباحي (المادة 7)، المخالفات اليومية، ' +
+    `${weeklySheetTitle()} (دمج التأخير الصباحي مع الانصراف المبكر بمخالفة عند ${weeklyRuleReachedText()} أسبوعياً وخصم ${ruleDaysText()} يوم)، ` +
+    'الاستئذان فوق 4 ساعات (118/ب)، الغياب غير المبرّر، نقص بصمة الانصراف، رصيد الإجازة السنوية، خصم المكافأة (15 يوماً)، ' +
+    'الإجازة المرضية (المادة 112)، التزام الإدارات، كشف الخصومات المُجمَّع، تقويم العطل الرسمية والدينية، ' +
+    'الدوام في العطل ونهاية الأسبوع، والمنهجية وجودة البيانات. ولتنزيل كل تقرير على حدة استخدم «قائمة تقارير الحضور والانصراف» أدناه.';
+}
+
+async function loadWeeklyRule() {
+  try {
+    const view = await fetch(`${API}/analysis-settings`).then(r => r.json());
+    applyWeeklyRule(view);
+    return view;
+  } catch (ex) {
+    return null;
+  }
+}
+
+function applyWeeklyRule(view) {
+  if (!view || !view.rule) return;
+  weeklyRule = view.rule;
+  const r = weeklyRule;
+
+  $('wrThreshold').value = r.thresholdMinutes;
+  $('wrCap').value = r.capMinutes;
+  $('wrDays').value = r.deductionDaysPerWeek;
+  $('wrGrace').value = r.morningGraceMinutes;
+  $('wrEnabled').checked = !!r.enabled;
+  $('wrCapOn').checked = !!r.capCountedMinutes;
+  $('wrStrict').checked = !!r.violationWhenExceededOnly;
+  $('wrEarly').checked = !!r.mergeEarlyDeparture;
+  $('wrGaps').checked = !!r.mergeMidDayGaps;
+  $('wrCounted').checked = !!r.useCountedInMonthlyRollup;
+  $('wrDepts').value = Object.entries(r.departmentThresholdMinutes || {})
+    .map(([k, v]) => `${k} = ${v}`).join('\n');
+  $('wrFile').textContent = view.settingsFile || '—';
+  el.grace.value = r.morningGraceMinutes;
+
+  const overrides = Object.keys(r.departmentThresholdMinutes || {}).length;
+  $('wrKpis').innerHTML =
+    kpi('حالة القاعدة', r.enabled ? 'مُفعّلة' : 'معطّلة',
+      view.isCustomized ? 'قيم محفوظة في punch-analysis.json' : 'القيم الافتراضية من appsettings.json',
+      r.enabled ? 'ok' : 'warn') +
+    kpi('حدّ المخالفة الأسبوعي', `${r.thresholdMinutes} دقيقة`,
+      r.violationWhenExceededOnly ? 'المخالفة عند تجاوز الحدّ' : 'المخالفة عند بلوغ الحدّ', 'info') +
+    kpi('سقف الناتج المحتسب', r.capCountedMinutes ? `${r.effectiveCapMinutes} دقيقة` : 'بلا تقييد',
+      r.capMinutes > 0 ? 'سقف مستقل عن الحدّ الأسبوعي' : 'يتبع الحدّ الأسبوعي') +
+    kpi('أيام الخصم لكل أسبوع', ruleDaysText(), 'تُجمع في الملخص الشهري (118/ج)', 'warn') +
+    kpi('إدارات بحدّ خاص', fmt(overrides), overrides ? 'حدّ مختلف لكل إدارة محدّدة' : 'لا توجد تجاوزات', overrides ? 'warn' : '') +
+    kpi('آخر تحليل بالخدمة', view.lastAnalyzedAtUtc ? new Date(view.lastAnalyzedAtUtc + 'Z').toLocaleString('en-GB') : '—',
+      view.pendingReanalysis ? 'الإعدادات تغيّرت — أعد التحليل لتطبيقها' : 'النتائج مطابقة للإعدادات',
+      view.pendingReanalysis ? 'warn' : 'info');
+
+  $('weeklySecTitle').textContent = `أسابيع ${weeklyRuleReachedText()} — دمج التأخير الصباحي مع الانصراف المبكر (المادة 118/ج)`;
+  $('weeklySecHint').textContent = r.enabled
+    ? `يُدمج (التأخير الصباحي${r.mergeEarlyDeparture ? ' + الانصراف المبكر' : ''}${r.mergeMidDayGaps ? ' + المغادرة أثناء الدوام' : ''}) في ناتج أسبوعي واحد، ` +
+      `والمخالفة عند ${r.violationWhenExceededOnly ? 'تجاوز' : 'بلوغ'} ${r.thresholdMinutes} دقيقة أسبوعياً، وخصم ${ruleDaysText()} يوم لكل أسبوع مخالف` +
+      (r.capCountedMinutes ? ` (الناتج المحتسب ≤ ${r.effectiveCapMinutes} دقيقة).` : ' (بلا تقييد للناتج المحتسب).')
+    : 'قاعدة المادة 118/ج معطّلة من الإعدادات — لا يُبنى تجميع أسبوعي ولا يُحتسب خصم.';
+  $('thWeeklyCounted').textContent = r.capCountedMinutes ? `الناتج المحتسب (≤ ${r.effectiveCapMinutes})` : 'الناتج المحتسب (الفعلي)';
+  $('thWeeklyDeduction').textContent = `الخصم (أيام — ${ruleDaysText()}/أسبوع)`;
+  $('sheetsHint').textContent = sheetsHintText();
+  fillShiftSettings(r);
+  fillWorkTimeSettings(r);
+  $('wtFile').textContent = view.settingsFile || '—';
+}
+
+function rulePayload() {
+  const int = (v, min, max, def) => {
+    const n = parseInt(v, 10);
+    return isNaN(n) ? def : Math.max(min, Math.min(max, n));
+  };
+  const num = (v, min, max, def) => {
+    const n = parseFloat(v);
+    return isNaN(n) ? def : Math.max(min, Math.min(max, n));
+  };
+
+  const depts = {};
+  ($('wrDepts').value || '').split('\n').forEach(line => {
+    const parts = line.split(/[=:|]/);
+    if (parts.length < 2) return;
+    const name = parts[0].trim();
+    const value = parseInt(parts[1].trim(), 10);
+    if (name && !isNaN(value) && value > 0) depts[name] = value;
+  });
+
+  return {
+    enabled: $('wrEnabled').checked,
+    thresholdMinutes: int($('wrThreshold').value, 1, 720, 60),
+    capMinutes: int($('wrCap').value, 0, 1440, 0),
+    deductionDaysPerWeek: num($('wrDays').value, 0, 30, 1),
+    morningGraceMinutes: int($('wrGrace').value, 0, 240, 15),
+    capCountedMinutes: $('wrCapOn').checked,
+    violationWhenExceededOnly: $('wrStrict').checked,
+    mergeEarlyDeparture: $('wrEarly').checked,
+    mergeMidDayGaps: $('wrGaps').checked,
+    useCountedInMonthlyRollup: $('wrCounted').checked,
+    departmentThresholdMinutes: depts
+  };
+}
+
+function wrMsg(text, ok) {
+  const box = $('wrMsg');
+  box.hidden = false;
+  box.className = 'msg' + (ok === undefined ? '' : ok ? ' ok' : ' bad');
+  box.textContent = text;
+}
+
+async function wrSend(url, method) {
+  const r = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rulePayload())
+  });
+  const data = await r.json().catch(() => ({}));
+  return { ok: r.ok, data };
+}
+
+function renderRulePreview(p) {
+  const before = p.current, after = p.projected;
+  const delta = (a, b) => (b - a > 0 ? `+${fmt(b - a)}` : fmt(b - a));
+
+  $('wrPreviewKpis').innerHTML =
+    kpi('أسابيع مخالفة (حالياً ← متوقّع)', `${fmt(before.violatingWeeks)} ← ${fmt(after.violatingWeeks)}`,
+      `الفرق: ${delta(before.violatingWeeks, after.violatingWeeks)}`, 'warn') +
+    kpi('إجمالي أيام الخصم', `${fmt(before.deductionDays)} ← ${fmt(after.deductionDays)}`,
+      `الفرق: ${delta(before.deductionDays, after.deductionDays)} يوم`, 'bad') +
+    kpi('إجمالي الناتج المحتسب (دقيقة)', `${fmt(before.countedMinutes)} ← ${fmt(after.countedMinutes)}`,
+      `الفرق: ${delta(before.countedMinutes, after.countedMinutes)}`, 'info') +
+    kpi('موظفون لديهم أسبوع مخالف', `${fmt(before.employeesWithViolations)} ← ${fmt(after.employeesWithViolations)}`,
+      `${fmt(after.employees)} موظفاً في التحليل`, 'warn') +
+    kpi('أسابيع يتغيّر حكمها', fmt(p.changedWeeks), p.proposedSummary, 'bad');
+
+  $('wrPreviewBox').hidden = false;
+  rows('wrPreviewTable', p.samples || [], d => ([
+    { v: d.jobNumber }, { v: d.employeeName || '—' }, { v: d.departmentName || '—' }, { v: d.weekStart },
+    { v: fmt(d.totalMinutes), cls: 'n' },
+    { v: fmt(d.currentCountedMinutes), cls: 'n' },
+    { v: fmt(d.currentDeductionDays), cls: 'n' },
+    { v: fmt(d.projectedCountedMinutes), cls: 'bad' },
+    { v: fmt(d.projectedDeductionDays), cls: 'bad' }
+  ]));
+}
+
+$('wrSave').addEventListener('click', async () => {
+  wrMsg('جارٍ حفظ الإعدادات…');
+  try {
+    const { ok, data } = await wrSend(`${API}/analysis-settings`, 'PUT');
+    if (!ok) { wrMsg(data.message || 'تعذّر حفظ الإعدادات.', false); return; }
+    applyWeeklyRule(data.settings);
+    wrMsg(data.message || 'حُفظت الإعدادات.', true);
+    await Promise.all([loadReports(), loadWeeklyRule()]);
+  } catch (ex) {
+    wrMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('wrPreview').addEventListener('click', async () => {
+  wrMsg('جارٍ حساب أثر الإعدادات المرشّحة…');
+  try {
+    const { ok, data } = await wrSend(`${API}/analysis-settings/preview`, 'POST');
+    if (!ok) { wrMsg(data.message || 'تعذّر حساب الأثر.', false); return; }
+    renderRulePreview(data);
+    wrMsg(`المعاينة: ${fmt(data.changedWeeks)} أسبوعاً يتغيّر حكمها — لم يُحفظ أي تغيير بعد.`, true);
+  } catch (ex) {
+    wrMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('wrReset').addEventListener('click', async () => {
+  wrMsg('جارٍ إعادة القيم الافتراضية…');
+  try {
+    const r = await fetch(`${API}/analysis-settings/reset`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wrMsg(data.message || 'تعذّرت إعادة الافتراضي.', false); return; }
+    applyWeeklyRule(data.settings);
+    $('wrPreviewBox').hidden = true;
+    wrMsg(data.message || 'أُعيدت القيم الافتراضية.', true);
+    await loadReports();
+  } catch (ex) {
+    wrMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('wrReanalyze').addEventListener('click', async () => {
+  wrMsg('جارٍ إعادة التحليل بالقاعدة السارية…');
+  try {
+    const r = await fetch(`${API}/analyze`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wrMsg(data.message || 'تعذّرت إعادة التحليل.', false); return; }
+    await refresh();
+    wrMsg('أُعيد التحليل بالقاعدة السارية — راجع المؤشرات أعلاه.', true);
+  } catch (ex) {
+    wrMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+// ===================== قسم 8: جدول الورديات الشهري والاستثناءات =====================
+
+let shiftView = null;
+
+function shMsg(text, ok) {
+  const box = $('shMsg');
+  box.hidden = false;
+  box.className = 'msg' + (ok === undefined ? '' : ok ? ' ok' : ' bad');
+  box.textContent = text;
+}
+
+function shiftMonth() {
+  const m = /^(\d{4})-(\d{1,2})$/.exec(($('shMonth').value || '').trim());
+  if (m) return { year: parseInt(m[1], 10), month: parseInt(m[2], 10) };
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
+}
+
+function departmentExceptionsText(map) {
+  return Object.entries(map || {}).map(([name, e]) => {
+    const parts = [];
+    if (e.shiftSystem) parts.push('ورديات');
+    if (e.exemptFromWeeklyRule) parts.push('إعفاء118ج');
+    if (e.exemptFromMorningLateness) parts.push('إعفاءالتأخير');
+    if (e.exemptFromEarlyDeparture) parts.push('إعفاءالانصراف');
+    if (e.exemptFromAbsence) parts.push('إعفاءالغياب');
+    if (e.thresholdMinutes) parts.push(`حدّ=${e.thresholdMinutes}`);
+    if (e.capMinutes) parts.push(`سقف=${e.capMinutes}`);
+    if (e.note) parts.push(`سبب=${e.note}`);
+    return `${name} = ${parts.join('، ')}`;
+  }).join('\n');
+}
+
+function parseDepartmentExceptions(text) {
+  const out = {};
+  (text || '').split('\n').forEach(line => {
+    const raw = line.trim();
+    if (!raw) return;
+    const eq = raw.indexOf('=');
+    if (eq < 0) return;
+    const name = raw.slice(0, eq).trim();
+    if (!name) return;
+
+    const entry = {
+      shiftSystem: false,
+      exemptFromWeeklyRule: false,
+      exemptFromMorningLateness: false,
+      exemptFromEarlyDeparture: false,
+      exemptFromAbsence: false,
+      thresholdMinutes: null,
+      capMinutes: null,
+      note: null
+    };
+
+    raw.slice(eq + 1).split(/[,،;+|]/).map(t => t.trim()).filter(Boolean).forEach(token => {
+      const t = token.replace(/\s+/g, ' ');
+      const num = /(\d{1,4})/.exec(t);
+      if (/^حد/.test(t)) { if (num) entry.thresholdMinutes = parseInt(num[1], 10); return; }
+      if (/^سقف/.test(t)) { if (num) entry.capMinutes = parseInt(num[1], 10); return; }
+      if (/^سبب|^ملاحظ/.test(t)) { entry.note = t.replace(/^[^=:]*[=:]\s*/, ''); return; }
+      if (/وردي|شفت/.test(t)) { entry.shiftSystem = true; return; }
+      if (/118|اسبوعي|أسبوعي|قاعده|قاعدة/.test(t)) { entry.exemptFromWeeklyRule = true; return; }
+      if (/تاخير|تأخير|مادة\s*7/.test(t)) { entry.exemptFromMorningLateness = true; return; }
+      if (/انصراف/.test(t)) { entry.exemptFromEarlyDeparture = true; return; }
+      if (/غياب/.test(t)) { entry.exemptFromAbsence = true; return; }
+    });
+
+    out[name] = entry;
+  });
+  return out;
+}
+
+function fillShiftSettings(rule) {
+  if (!rule || !rule.shift) return;
+  const s = rule.shift;
+
+  $('shEnabled').checked = !!s.enabled;
+  $('shCycle').value = s.cycleHours;
+  $('shGrace').value = s.dutyGraceMinutes || 0;
+  $('shExWeekly').checked = !!s.exemptFromWeeklyRule;
+  $('shExLate').checked = !!s.exemptFromMorningLateness;
+  $('shExEarly').checked = !!s.exemptFromEarlyDeparture;
+  $('shRestNoAbsence').checked = !!s.restDaysNotAbsence;
+  $('shMissingExempt').checked = !!s.missingScheduleExempts;
+  $('shMissingAbsence').checked = !!s.missingPunchIsAbsence;
+  $('shDepartments').value = (s.departments || []).join('\n');
+  $('shExceptions').value = departmentExceptionsText(rule.departmentExceptions || {});
+
+  const exceptions = Object.keys(rule.departmentExceptions || {}).length;
+  $('shRuleSummary').textContent =
+    `${s.enabled ? 'نظام الورديات مُفعّل' : 'نظام الورديات معطّل'} — طول الوردية ${s.cycleHours} ساعة`
+    + ` | إدارات ورديات محدّدة: ${(s.departments || []).length}`
+    + ` | استثناءات إدارية: ${exceptions}`
+    + (s.exemptFromWeeklyRule ? ' | إعفاء من 118/ج' : '')
+    + (s.exemptFromMorningLateness ? ' | إعفاء من التأخير الصباحي' : '');
+}
+
+async function loadShifts() {
+  const v = await fetch(`${API}/shifts?sampleSize=80`).then(r => r.json());
+  shiftView = v;
+
+  $('shKpis').innerHTML =
+    kpi('قيود الجدول المستوردة', fmt(v.entries),
+      v.entries ? `الفترة: ${v.periodFrom} → ${v.periodTo}` : 'لم يُستورد جدول ورديات بعد', v.entries ? 'info' : '') +
+    kpi('موظفون في الجدول', fmt(v.employees), `${fmt(v.batches)} دفعة استيراد`, 'info') +
+    kpi('ورديات / راحة / إجازات', `${fmt(v.dutyDays)} / ${fmt(v.restDays)} / ${fmt(v.leaveDays)}`,
+      `قيود أخرى: ${fmt(v.otherDays)}`, 'warn') +
+    kpi('إدارات الجدول', fmt((v.departments || []).length),
+      (v.departments || []).slice(0, 3).join('، ') || '—') +
+    kpi('حالة نظام الورديات', v.enabled ? 'مُفعّل' : 'معطّل', v.ruleSummary, v.enabled ? 'ok' : 'warn');
+
+  rows('shBatchTable', v.batchList || [], b => ([
+    { v: b.batchKey || '—' }, { v: b.fileName }, { v: b.periodFrom }, { v: b.periodTo },
+    { v: fmt(b.rows), cls: 'n' }, { v: fmt(b.employees), cls: 'n' },
+    { v: fmt(b.dutyDays), cls: 'n' }, { v: fmt(b.restDays), cls: 'n' }, { v: fmt(b.leaveDays), cls: 'n' },
+    { v: b.format }, { v: b.importedAtText },
+    { v: `<button class="del" data-id="${b.id}">حذف</button>` }
+  ]));
+
+  rows('shEntryTable', v.samples || [], e => ([
+    { v: e.jobNumber }, { v: e.employeeName || '—' }, { v: e.departmentName || '—' },
+    { v: e.dateText }, { v: e.dayName }, { v: e.shiftCode }, { v: e.kindText },
+    { v: fmt(e.hours), cls: 'n' }
+  ]));
+
+  return v;
+}
+
+// ---- قسم 8: المعالجات (استيراد/تنزيل/حفظ الإعدادات) ----
+
+(function initShiftMonth() {
+  const now = new Date();
+  $('shMonth').value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+})();
+
+$('shTemplate').addEventListener('click', () => {
+  const { year, month } = shiftMonth();
+  const dept = encodeURIComponent(($('shDept').value || '').trim());
+  window.location.href = `${API}/shifts/template?year=${year}&month=${month}&department=${dept}`;
+});
+
+$('shImportBtn').addEventListener('click', () => $('shFile').click());
+$('shExport').addEventListener('click', () => { window.location.href = `${API}/shifts/export`; });
+
+$('shFile').addEventListener('change', async () => {
+  const f = $('shFile').files[0];
+  if (!f) return;
+
+  if (!f.name.toLowerCase().endsWith('.xlsx')) {
+    shMsg('الصيغة المدعومة هي .xlsx فقط.', false);
+    $('shFile').value = '';
+    return;
+  }
+
+  const { year, month } = shiftMonth();
+  const batchKey = `${year}-${String(month).padStart(2, '0')}`;
+  shMsg('جارٍ استيراد جدول الورديات…');
+
+  try {
+    const fd = new FormData();
+    fd.append('file', f, f.name);
+    const url = `${API}/shifts/import?batchKey=${batchKey}&year=${year}&month=${month}&replace=${$('shReplace').checked}`;
+    const r = await fetch(url, { method: 'POST', body: fd });
+    const j = await r.json().catch(() => ({}));
+    shMsg(j.message || (r.ok ? 'تم الاستيراد.' : 'تعذّر الاستيراد.'), r.ok);
+    if (r.ok) {
+      await loadShifts();
+    }
+  } catch (ex) {
+    shMsg('تعذّر الاتصال: ' + ex.message, false);
+  } finally {
+    $('shFile').value = '';
+  }
+});
+
+$('shRefresh').addEventListener('click', () => {
+  loadShifts()
+    .then(() => shMsg('حُدِّث جدول الورديات.', true))
+    .catch(ex => shMsg('تعذّر التحديث: ' + ex.message, false));
+});
+
+$('shReanalyze').addEventListener('click', async () => {
+  shMsg('جارٍ إعادة التحليل بالجدول والإعدادات السارية…');
+  try {
+    const r = await fetch(`${API}/analyze`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { shMsg(data.message || 'تعذّرت إعادة التحليل.', false); return; }
+    await refresh();
+    shMsg('أُعيد التحليل بجدول الورديات والاستثناءات — راجع المؤشرات أعلاه.', true);
+  } catch (ex) {
+    shMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('shBatchTable').addEventListener('click', async e => {
+  const b = e.target.closest('button.del');
+  if (!b) return;
+  if (!confirm('حذف دفعة جدول الورديات هذه وكل قيودها من التحليل؟')) return;
+
+  shMsg('جارٍ حذف الدفعة…');
+  try {
+    const r = await fetch(`${API}/shifts/batches/${b.dataset.id}`, { method: 'DELETE' });
+    const j = await r.json().catch(() => ({}));
+    shMsg(j.message || (r.ok ? 'تم الحذف.' : 'تعذّر الحذف.'), r.ok);
+    if (r.ok) {
+      await loadShifts();
+    }
+  } catch (ex) {
+    shMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('shSave').addEventListener('click', async () => {
+  const num = (v, min, max, def) => {
+    const n = parseFloat(v);
+    return isNaN(n) ? def : Math.max(min, Math.min(max, n));
+  };
+
+  const payload = {
+    shift: {
+      enabled: $('shEnabled').checked,
+      cycleHours: num($('shCycle').value, 1, 24, 24),
+      dutyGraceMinutes: Math.round(num($('shGrace').value, 0, 240, 0)),
+      exemptFromWeeklyRule: $('shExWeekly').checked,
+      exemptFromMorningLateness: $('shExLate').checked,
+      exemptFromEarlyDeparture: $('shExEarly').checked,
+      restDaysNotAbsence: $('shRestNoAbsence').checked,
+      missingScheduleExempts: $('shMissingExempt').checked,
+      missingPunchIsAbsence: $('shMissingAbsence').checked,
+      departments: ($('shDepartments').value || '').split('\n').map(s => s.trim()).filter(Boolean)
+    },
+    departmentExceptions: parseDepartmentExceptions($('shExceptions').value)
+  };
+
+  shMsg('جارٍ حفظ إعدادات الورديات والاستثناءات…');
+  try {
+    const r = await fetch(`${API}/analysis-settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { shMsg(data.message || 'تعذّر الحفظ.', false); return; }
+
+    applyWeeklyRule(data.settings);
+    await loadShifts();
+    shMsg((data.message || 'حُفظت الإعدادات.') + ' — أعد التحليل لتطبيقها على النتائج.', true);
+  } catch (ex) {
+    shMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('shRuleReset').addEventListener('click', async () => {
+  shMsg('جارٍ إعادة القيم الافتراضية (appsettings)…');
+  try {
+    const r = await fetch(`${API}/analysis-settings/reset`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { shMsg(data.message || 'تعذّرت إعادة الافتراضي.', false); return; }
+
+    applyWeeklyRule(data.settings);
+    await loadShifts();
+    shMsg(data.message || 'أُعيدت القيم الافتراضية.', true);
+  } catch (ex) {
+    shMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+// ===================== قسم 9: الدوام المرن والعمل الإضافي =====================
+
+let workTimeView = null;
+
+function wtMsg(text, ok) {
+  const box = $('wtMsg');
+  box.hidden = false;
+  box.className = 'msg' + (ok === undefined ? '' : ok ? ' ok' : ' bad');
+  box.textContent = text;
+}
+
+function linesToArray(text) {
+  return (text || '').split('\n').map(s => s.trim()).filter(Boolean);
+}
+
+function workTimeRates() {
+  const parts = ($('wtRates').value || '').split(/[\/|,\s]+/).map(s => parseFloat(s)).filter(n => !isNaN(n));
+  return {
+    regular: parts.length > 0 ? parts[0] : 1,
+    weekend: parts.length > 1 ? parts[1] : 1.5,
+    holiday: parts.length > 2 ? parts[2] : 2
+  };
+}
+
+function fillWorkTimeSettings(rule) {
+  if (!rule) return;
+  const fl = rule.flexible || {};
+  const ot = rule.overtime || {};
+
+  $('flOn').checked = !!fl.enabled;
+  $('flEarliest').value = fl.earliestArrival || '07:30';
+  $('flLatest').value = fl.latestArrival || '09:30';
+  $('flDaily').value = fl.completeDailyMinutes || 0;
+  $('flRequire').checked = !!fl.requireApproval;
+  $('flEarlyOt').checked = !!fl.earlyArrivalCountsAsOvertime;
+  $('flDepts').value = (fl.departments || []).join('\n');
+  $('flEmps').value = (fl.employees || []).join('\n');
+
+  $('wtOn').checked = !!ot.enabled;
+  $('wtMaxDay').value = (ot.maxMinutesPerDay === null || ot.maxMinutesPerDay === undefined) ? 180 : ot.maxMinutesPerDay;
+  $('wtMaxMonth').value = (ot.maxMinutesPerMonth === null || ot.maxMinutesPerMonth === undefined) ? 1200 : ot.maxMinutesPerMonth;
+  $('wtMinDay').value = (ot.minMinutesPerDay === null || ot.minMinutesPerDay === undefined) ? 30 : ot.minMinutesPerDay;
+  $('wtRound').value = ot.roundToMinutes || 0;
+  $('wtRates').value = `${ot.regularRate || 1} / ${ot.weekendRate || 1.5} / ${ot.holidayRate || 2}`;
+  $('wtCompLate').checked = !!ot.compensateLateness;
+  $('wtEarly').checked = !!ot.countEarlyArrival;
+  $('wtWeekend').checked = !!ot.countOnWeekends;
+  $('wtHoliday').checked = !!ot.countOnHolidays;
+  $('wtRequire').checked = !!ot.requireApproval;
+  $('wtDepts').value = (ot.departments || []).join('\n');
+  $('wtEmps').value = (ot.employees || []).join('\n');
+}
+
+function workTimePayload() {
+  const int = (v, min, max, def) => {
+    const n = parseInt(v, 10);
+    return isNaN(n) ? def : Math.max(min, Math.min(max, n));
+  };
+  const r = workTimeRates();
+
+  return {
+    flexible: {
+      enabled: $('flOn').checked,
+      earliestArrival: $('flEarliest').value || '07:30',
+      latestArrival: $('flLatest').value || '09:30',
+      completeDailyMinutes: int($('flDaily').value, 0, 720, 0),
+      requireApproval: $('flRequire').checked,
+      earlyArrivalCountsAsOvertime: $('flEarlyOt').checked,
+      departments: linesToArray($('flDepts').value),
+      employees: linesToArray($('flEmps').value)
+    },
+    overtime: {
+      enabled: $('wtOn').checked,
+      maxMinutesPerDay: int($('wtMaxDay').value, 0, 720, 180),
+      maxMinutesPerMonth: int($('wtMaxMonth').value, 0, 24000, 1200),
+      minMinutesPerDay: int($('wtMinDay').value, 0, 720, 30),
+      roundToMinutes: int($('wtRound').value, 0, 60, 0),
+      regularRate: r.regular,
+      weekendRate: r.weekend,
+      holidayRate: r.holiday,
+      compensateLateness: $('wtCompLate').checked,
+      countEarlyArrival: $('wtEarly').checked,
+      countOnWeekends: $('wtWeekend').checked,
+      countOnHolidays: $('wtHoliday').checked,
+      requireApproval: $('wtRequire').checked,
+      departments: linesToArray($('wtDepts').value),
+      employees: linesToArray($('wtEmps').value)
+    }
+  };
+}
+
+
+function renderWorkTimeSummary(view) {
+  $('wtKpis').innerHTML =
+    kpi('تصاريح العمل الإضافي', fmt(view.overtimeCount), 'تصاريح بحدود ساعات يومية/إجمالية', view.overtimeCount ? 'info' : '') +
+    kpi('تصاريح الدوام المرن', fmt(view.flexibleCount), 'نافذة حضور وإكمال ساعات', view.flexibleCount ? 'info' : '') +
+    kpi('التصاريح السارية', `${fmt(view.activeCount)} / ${fmt(view.total)}`,
+      view.periodFrom ? `الفترة: ${view.periodFrom} → ${view.periodTo}` : 'لا تصاريح مسجّلة بعد') +
+    kpi('موظفون مصرَّح لهم', fmt(view.employeesCount),
+      view.hasApprovals ? 'تصاريح مسجّلة في قاعدة البيانات' : 'يمكن الاعتماد على قوائم الإدارات/الأرقام') +
+    kpi('حالة الاحتساب', view.overtime.enabled ? 'العمل الإضافي مُفعّل' : 'العمل الإضافي معطّل',
+      view.flexible.enabled ? 'الدوام المرن مُفعّل' : 'الدوام المرن معطّل',
+      view.overtime.enabled ? 'ok' : 'warn') +
+    kpi('اشتراط الموافقة المسبقة', view.overtime.requireApproval ? 'مُفعَّل' : 'معطّل',
+      view.overtime.requireApproval
+        ? (view.overtimeCount > 0 || (view.overtime.departments || []).length || (view.overtime.employees || []).length
+          ? 'يُحتسب الإضافي للتصاريح السارية والقوائم المعتمدة فقط'
+          : 'لا تصاريح ولا قوائم ⇒ لا يُحتسب أي عمل إضافي (المطلوب إدخال تصاريح)')
+        : 'يُحتسب الإضافي وفق الحدود بلا اشتراط تصريح مسبق',
+      view.overtime.requireApproval ? 'ok' : 'warn');
+
+  $('wtSummary').textContent = `${view.overtimeSummary} — ${view.flexibleSummary}`;
+}
+
+async function loadWorkApprovals() {
+  try {
+    const v = await fetch(`${API}/work-approvals`).then(r => r.json());
+    workTimeView = v;
+    renderWorkTimeSummary(v);
+
+    rows('apTable', v.items || [], a => ([
+      { v: a.kind },
+      { v: a.jobNumber },
+      { v: a.employeeName || '—' },
+      { v: a.departmentName || '—' },
+      { v: a.fromText },
+      { v: a.toText },
+      { v: fmt(a.days), cls: 'n' },
+      { v: a.maxMinutesPerDay ? fmt(a.maxMinutesPerDay) : 'الإعدادات', cls: 'n' },
+      { v: a.maxMinutesTotal ? fmt(a.maxMinutesTotal) : 'السقف الشهري', cls: 'n' },
+      { v: a.isActive ? 'ساري' : 'موقوف' },
+      { v: a.source },
+      { v: a.note || '—' },
+      { v: `<button data-id="${a.id}" data-job="${a.jobNumber}" data-kind="${a.kind}"`
+          + ` data-dept="${a.departmentName || ''}" data-from="${a.fromText}" data-to="${a.toText}"`
+          + ` data-perday="${a.maxMinutesPerDay || 0}" data-total="${a.maxMinutesTotal || 0}"`
+          + ` data-note="${a.note || ''}">تعديل</button> <button class="del" data-id="${a.id}">حذف</button>` }
+    ]));
+
+    return v;
+  } catch (ex) {
+    wtMsg('تعذّر تحميل التصاريح: ' + ex.message, false);
+    return null;
+  }
+}
+
+function clearApprovalForm() {
+  $('apId').value = '0';
+  $('apJob').value = '';
+  $('apDept').value = '';
+  $('apKind').value = 'overtime';
+  $('apPerDay').value = 0;
+  $('apTotal').value = 0;
+  $('apNote').value = '';
+}
+
+(function initApprovalDates() {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  $('apFrom').value = iso(first);
+  $('apTo').value = iso(last);
+})();
+
+// ---- قسم 9: المعالجات (حفظ الإعدادات + التصاريح + الترحيل) ----
+
+$('wtSave').addEventListener('click', async () => {
+  wtMsg('جارٍ حفظ إعدادات الدوام المرن والعمل الإضافي…');
+  try {
+    const r = await fetch(`${API}/analysis-settings`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(workTimePayload())
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wtMsg(data.message || 'تعذّر الحفظ.', false); return; }
+
+    applyWeeklyRule(data.settings);
+    await Promise.all([loadReports(), loadWorkApprovals()]);
+    wtMsg((data.message || 'حُفظت الإعدادات.') + ' — أعد التحليل لتطبيقها على النتائج.', true);
+  } catch (ex) {
+    wtMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('wtReset').addEventListener('click', async () => {
+  wtMsg('جارٍ إعادة القيم الافتراضية (appsettings)…');
+  try {
+    const r = await fetch(`${API}/analysis-settings/reset`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wtMsg(data.message || 'تعذّرت إعادة الافتراضي.', false); return; }
+
+    applyWeeklyRule(data.settings);
+    await Promise.all([loadReports(), loadWorkApprovals()]);
+    wtMsg(data.message || 'أُعيدت القيم الافتراضية.', true);
+  } catch (ex) {
+    wtMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('wtReanalyze').addEventListener('click', async () => {
+  wtMsg('جارٍ إعادة التحليل بالقواعد السارية…');
+  try {
+    const r = await fetch(`${API}/analyze`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wtMsg(data.message || 'تعذّرت إعادة التحليل.', false); return; }
+
+    await refresh();
+    wtMsg('أُعيد التحليل — راجع مؤشرات العمل الإضافي والدوام المرن.', true);
+  } catch (ex) {
+    wtMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('apSave').addEventListener('click', async () => {
+  const payload = {
+    id: parseInt($('apId').value || '0', 10),
+    jobNumber: ($('apJob').value || '').trim(),
+    departmentName: ($('apDept').value || '').trim(),
+    fromDate: $('apFrom').value,
+    toDate: $('apTo').value,
+    kind: $('apKind').value,
+    maxHoursPerDay: parseFloat($('apPerDay').value || '0') || 0,
+    maxHoursTotal: parseFloat($('apTotal').value || '0') || 0,
+    note: ($('apNote').value || '').trim(),
+    isActive: true
+  };
+
+  wtMsg('جارٍ حفظ التصريح…');
+  try {
+    const r = await fetch(`${API}/work-approvals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wtMsg(data.message || 'تعذّر حفظ التصريح.', false); return; }
+
+    clearApprovalForm();
+    await loadWorkApprovals();
+    wtMsg(data.message || 'حُفظ التصريح.', true);
+  } catch (ex) {
+    wtMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('apClear').addEventListener('click', () => {
+  clearApprovalForm();
+  wtMsg('فُرّغت حقول التصريح — يمكنك إدخال تصريح جديد.');
+});
+
+$('apBulk').addEventListener('click', async () => {
+  const text = $('apBulkText').value || '';
+  if (!text.trim()) {
+    wtMsg('أدخل سطراً على الأقل بصيغة: الرقم | من | إلى | ساعات/يوم | إجمالي | النوع | ملاحظة', false);
+    return;
+  }
+
+  wtMsg('جارٍ استيراد التصاريح…');
+  try {
+    const r = await fetch(`${API}/work-approvals/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text })
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wtMsg(data.message || 'تعذّر الاستيراد.', false); return; }
+
+    await loadWorkApprovals();
+    const errors = (data.errors && data.errors.length) ? ` | نموذج رفض: ${data.errors[0]}` : '';
+    wtMsg((data.message || 'تم الاستيراد.') + errors, data.skipped === 0);
+  } catch (ex) {
+    wtMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('apRefresh').addEventListener('click', () => loadWorkApprovals());
+
+$('apSync').addEventListener('click', async () => {
+  if (!confirm('ترحيل إجمالي ساعات العمل الإضافي الشهرية المحتسبة إلى سجل «العمل الإضافي» (OvertimeRecords)؟')) return;
+
+  wtMsg('جارٍ الترحيل…');
+  try {
+    const r = await fetch(`${API}/work-approvals/sync-overtime`, { method: 'POST' });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { wtMsg(data.message || 'تعذّر الترحيل.', false); return; }
+
+    wtMsg(data.message || 'تم الترحيل.', data.records > 0);
+  } catch (ex) {
+    wtMsg('تعذّر الاتصال: ' + ex.message, false);
+  }
+});
+
+$('apTable').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button');
+  if (!btn) return;
+
+  if (btn.classList.contains('del')) {
+    if (!confirm('حذف هذا التصريح نهائياً؟')) return;
+    try {
+      const r = await fetch(`${API}/work-approvals/${btn.dataset.id}`, { method: 'DELETE' });
+      const data = await r.json().catch(() => ({}));
+      wtMsg(data.message || (r.ok ? 'تم الحذف.' : 'تعذّر الحذف.'), r.ok);
+      await loadWorkApprovals();
+    } catch (ex) {
+      wtMsg('تعذّر الاتصال: ' + ex.message, false);
+    }
+    return;
+  }
+
+  if (btn.dataset.job) {
+    $('apId').value = btn.dataset.id;
+    $('apJob').value = btn.dataset.job;
+    $('apDept').value = btn.dataset.dept || '';
+    $('apFrom').value = (btn.dataset.from || '').replace(/\//g, '-');
+    $('apTo').value = (btn.dataset.to || '').replace(/\//g, '-');
+    $('apKind').value = (btn.dataset.kind === 'دوام مرن') ? 'flexible' : 'overtime';
+    $('apPerDay').value = Math.round((parseInt(btn.dataset.perday || '0', 10) / 60) * 2) / 2;
+    $('apTotal').value = Math.round(parseInt(btn.dataset.total || '0', 10) / 60);
+    $('apNote').value = btn.dataset.note || '';
+    wtMsg('حقول التصريح مُعبّأة للتعديل — عدّل ثم اضغط «إضافة/تحديث التصريح».');
+  }
+});
+
+/* ============================================================================
+   اللوحة المركزية — مؤشرات ومخططات ثلاثية الأبعاد
+   ========================================================================== */
+function dashPct(part, whole) { return whole ? Math.round((part * 100 / whole) * 10) / 10 : 0; }
+function dashChip(text, cls) { return '<span class="chip ' + (cls || '') + '">' + text + '</span>'; }
+
+/* يبني شارات القائمة اليمنى من الملخص (تعمل حتى قبل تهيئة اللوحة) */
+function applyDashBadges(s) {
+  const sh = window.APP && window.APP.shell;
+  if (!sh || !sh.setBadge) return;
+  if (!s || !s.hasData) {
+    ['violations', 'workTimeSection', 'weeklyRuleSection', 'quality', 'kpi'].forEach(id => sh.setBadge(id, ''));
+    return;
+  }
+  sh.setBadge('violations', fmt(s.employeesWithViolations), 'warn');
+  sh.setBadge('kpi', fmt(s.employeesAnalyzed));
+  sh.setBadge('quality', s.noDataDays ? fmt(s.noDataDays) : '', s.noDataDays ? 'warn' : '');
+  sh.setBadge('weeklyRuleSection', s.weeksOver60Minutes ? fmt(s.weeksOver60Minutes) : '', 'bad');
+  sh.setBadge('workTimeSection', s.overtimeNeedsApprovalMinutes ? fmt(s.overtimeNeedsApprovalMinutes) : '',
+    s.overtimeNeedsApprovalMinutes ? 'warn' : '');
+}
+
+/* بطاقات اللوحة (KPI) */
+function dashKpiHtml(s) {
+  const violPct = dashPct(s.employeesWithViolations, s.employeesAnalyzed);
+  const reqApproval = weeklyRule && weeklyRule.overtime ? !!weeklyRule.overtime.requireApproval : null;
+  return [
+    ['info', '👥', 'الموظفون المُحلَّلون', fmt(s.employeesAnalyzed), `${fmt(s.recordsAnalyzed)} صف بصمة`],
+    ['ok', '✅', 'أيام عمل مكتملة', fmt(s.completeDays), `بلا بصمة انصراف: ${fmt(s.incompleteDays)} يوماً`],
+    ['bad', '🚫', 'أيام الغياب غير المبرّر', fmt(s.absentDays), `منها ${fmt(s.absentDaysOnWeekend)} في أيام العطل`],
+    [violPct >= 50 ? 'bad' : 'warn', '⚠️', 'موظفون لديهم مخالفات', fmt(s.employeesWithViolations),
+      `${violPct}% من الموظفين — الالتزام ${fmt(100 - violPct)}%`],
+    ['info', '⏱', 'دقائق العمل الإضافي المحتسبة', fmt(s.overtimeMinutes) + ' د',
+      `${fmt(s.overtimeHours)} ساعة — ${fmt(s.overtimeEmployees)} موظفاً`],
+    [s.overtimeNeedsApprovalMinutes ? 'warn' : 'ok', '🕓', 'معلَّق بانتظار موافقة مسبقة',
+      fmt(s.overtimeNeedsApprovalMinutes) + ' د',
+      reqApproval === false ? 'قاعدة اشتراط الموافقة معطَّلة' : `${fmt(s.overtimeNeedsApprovalDays)} يوماً بلا تصريح سابق`],
+    ['bad', '⚖️', `أسابيع بلغت ${(weeklyRule && weeklyRule.thresholdMinutes) || 60} دقيقة (118/ج)`, fmt(s.weeksOver60Minutes),
+      `خصم ${fmt(s.totalArticle118cDays)} يوم — ${fmt(s.employeesOver60Minutes)} موظفاً`],
+    ['bad', '🩺', 'أيام فوق 4 ساعات (118/ب)', fmt(s.daysOver4Hours), `خصم ${fmt(s.totalArticle118bDays)} يوم من الرصيد`],
+    ['purple', '🕔', 'أيام الدوام المرن', fmt(s.flexibleDays),
+      `${fmt(s.flexibleMinutes)} دقيقة — ${fmt(s.flexibleEmployees)} موظفاً`],
+    ['bad', '📉', 'إجمالي أيام حسم الراتب', fmt(s.totalSalaryDeductionDays), 'الغياب + عقوبات المادة 7']
+  ].map(x => '<div class="kpi ' + x[0] + '"><span class="kico">' + x[1] + '</span>' +
+    '<div class="v">' + x[3] + '</div><div class="l">' + x[2] + '</div>' +
+    '<div class="n">' + x[4] + '</div></div>').join('');
+}
+
+/* شرائح المخططات الثلاثة */
+function dashDaySlices(s) {
+  const P = TIME.colors, raw = [
+    ['أيام عمل مكتملة', s.completeDays, P.ok, s.completeDays + ' يوم'],
+    ['أيام بلا بصمة انصراف', s.incompleteDays, P.gold, s.incompleteDays + ' يوم'],
+    ['غياب غير مبرّر', s.absentDays, P.bad, s.absentDays + ' يوم'],
+    ['عطل رسمية ودينية', s.holidayDays, P.purple, s.holidayDays + ' يوم'],
+    ['نهاية الأسبوع', s.weekendDays, P.warn, s.weekendDays + ' يوم'],
+    ['أيام بلا بيانات', s.noDataDays, P.gray, s.noDataDays + ' يوم']
+  ];
+  const total = raw.reduce((a, r) => a + (+r[1] || 0), 0);
+  return raw.map(r => ({ label: r[0], value: r[1], color: r[2], note: r[3], share: dashPct(r[1], total), pct: dashPct(r[1], total) }));
+}
+
+function dashOvertimeSlices(s) {
+  const P = TIME.colors;
+  const other = Math.max(0, (+s.overtimeExcludedMinutes || 0) - (+s.overtimeNeedsApprovalMinutes || 0));
+  const raw = [
+    ['عمل إضافي مُحتسب (بتصريح)', s.overtimeMinutes, P.ok, 'مُحتسب فعلياً في الملخص الشهري'],
+    ['معلَّق بانتظار موافقة مسبقة', s.overtimeNeedsApprovalMinutes, P.warn, 'لا يُحتسب إضافياً قبل صدور التصريح'],
+    ['مستبعد وفق الحدود والتدوير', other, P.gray, 'فوق السقف اليومي/الشهري أو أقل من أقل مدة تُحتسب']
+  ];
+  const total = raw.reduce((a, r) => a + (+r[1] || 0), 0);
+  return raw.map(r => ({ label: r[0], value: r[1], color: r[2], note: r[3], share: dashPct(r[1], total), pct: dashPct(r[1], total) }));
+}
+
+function dashComplianceSlices(s) {
+  const P = TIME.colors;
+  const ok = Math.max(0, (+s.employeesAnalyzed || 0) - (+s.employeesWithViolations || 0));
+  const raw = [
+    ['موظفون بلا أي مخالفة', ok, P.ok, 'مطابقون للمواد 118/ب و118/ج وقاعدة 15 يوماً'],
+    ['موظفون لديهم مخالفات', s.employeesWithViolations, P.bad, 'يلزمهم حسم أو تسوية']
+  ];
+  const total = raw.reduce((a, r) => a + (+r[1] || 0), 0);
+  return raw.map(r => ({ label: r[0], value: r[1], color: r[2], note: r[3], share: dashPct(r[1], total), pct: dashPct(r[1], total) }));
+}
+
+/* شرائح الناتج الكامل: تُحتسب داخل HTML */
+
+/* ------------------------- رسم اللوحة المركزية ------------------------------ */
+function renderDashboard(s) {
+  window.__punchSummary = s || null;
+  if (typeof TIME === 'undefined') return;
+  const host = id => document.getElementById(id);
+  const noData = !s || !s.hasData;
+
+  if (noData) {
+    host('dashKpis').innerHTML = '<div class="kpi"><div class="v">—</div><div class="l">' +
+      'لا توجد نتائج مُحلَّلة بعد — ارفع ملف البصمات وشغّل المعالجة من شاشة «رفع ملف البصمات».</div></div>';
+    host('heroMeta').innerHTML = dashChip('لا توجد نتائج تحليل بعد', 'warn');
+    host('dashBars').innerHTML = '<div class="hint">لا توجد مخالفات مُرصودة بعد — تظهر المقارنة بعد أول تحليل.</div>';
+    host('daysNote').textContent = 'بانتظار أول تحليل لعرض التوزيع ثلاثي الأبعاد لأيام الفترة.';
+    host('overtimeNote').textContent = 'بانتظار أول تحليل لعرض تركيبة دقائق الدوام خارج الدوام الرسمي.';
+    host('complianceNote').textContent = 'بانتظار أول تحليل لعرض حالة التزام الموظفين.';
+    TIME.chart('#chartDays', { mode: 'pie', slices: [], emptyText: 'لا توجد نتائج محلَّلة بعد' });
+    TIME.chart('#chartOvertime', { mode: 'donut', slices: [], emptyText: 'لا توجد نتائج محلَّلة بعد' });
+    TIME.chart('#chartCompliance', { mode: 'donut', slices: [], emptyText: 'لا توجد نتائج محلَّلة بعد' });
+    applyDashBadges(null);
+    return;
+  }
+
+  /* 1) بطاقات المؤشرات */
+  host('dashKpis').innerHTML = dashKpiHtml(s);
+
+  /* 2) شرائح المعلومات أعلى اللوحة */
+  const reqApproval = weeklyRule && weeklyRule.overtime ? !!weeklyRule.overtime.requireApproval : null;
+  const chips = [
+    dashChip('آخر تحليل: <b>' + new Date(s.runAtUtc + 'Z').toLocaleString('en-GB') + '</b>'),
+    dashChip('الموظفون: <b>' + fmt(s.employeesAnalyzed) + '</b> · الصفوف: <b>' + fmt(s.recordsAnalyzed) + '</b>'),
+    dashChip('قاعدة الموافقة المسبقة على الإضافي: <b>' +
+      (reqApproval === null ? '—' : (reqApproval ? 'مُفعَّلة' : 'معطَّلة')) + '</b>',
+      reqApproval ? 'ok' : 'warn'),
+    dashChip('دقائق دوام خارج الدوام: <b>' + fmt(s.overtimeRawMinutes) + '</b> دقيقة', 'warn'),
+    dashChip('أيام العطل المعتمدة: <b>' + fmt(s.calendarHolidays) + '</b>', 'ok')
+  ];
+  if (s.shiftEmployees) chips.push(dashChip('موظفو الورديات: <b>' + fmt(s.shiftEmployees) + '</b>'));
+  host('heroMeta').innerHTML = chips.join('');
+
+  /* 3) مقارنة بصرية لأبرز المخالفات */
+  const barData = [
+    ['تأخير صباحي (المادة 7)', s.totalLatenessMinutes, TIME.colors.warn],
+    ['انصراف مبكر', s.totalEarlyDepartureMinutes, TIME.colors.pink],
+    ['مغادرة أثناء الدوام', s.totalMidDayGapMinutes, TIME.colors.purple],
+    ['الناتج الأسبوعي المحتسب (118/ج)', s.totalWeeklyLateMinutes, TIME.colors.bad]
+  ];
+  const maxBar = Math.max.apply(null, barData.map(b => +b[1] || 0).concat([1]));
+  host('dashBars').innerHTML = barData.map(b => {
+    const w = Math.max(2, Math.round(((+b[1] || 0) * 100) / maxBar));
+    return '<div class="bar-row"><span>' + b[0] + '</span><span>' + fmt(b[1]) + ' دقيقة</span>' +
+      '<span class="bar-track"><i style="width:' + w + '%;background:' + b[2] + '"></i></span></div>';
+  }).join('');
+
+  /* 4) المخططات الثلاثة ثلاثية الأبعاد */
+  const daySlices = dashDaySlices(s);
+  TIME.chart('#chartDays', {
+    mode: 'pie', slices: daySlices, unit: 'يوم', tipLabel: 'الأيام', explode: 0.07, height: 300
+  });
+  host('daysNote').innerHTML = 'إجمالي الأيام المشمولة في التحليل: <b>' +
+    fmt(daySlices.reduce((a, x) => a + (+x.value || 0), 0)) + '</b> يوم-موظف — أيام العطل ونهاية الأسبوع مستثناة من الغياب والمخالفات، ' +
+    'وأيام «بلا بيانات» سجلات ناقصة في النظام.';
+
+  const otSlices = dashOvertimeSlices(s);
+  const otTotal = otSlices.reduce((a, x) => a + (+x.value || 0), 0);
+  TIME.chart('#chartOvertime', {
+    mode: 'donut', hole: 0.54, slices: otSlices, unit: 'دقيقة', tipLabel: 'الدقائق',
+    centerValue: fmt(otTotal), centerLabel: 'دقيقة خارج الدوام', height: 300
+  });
+  host('overtimeNote').innerHTML = 'الدقائق المعلَّقة لا تُحتسب عملاً إضافياً قبل صدور تصريح سابق (القاعدة مُفعَّلة افتراضياً)، ' +
+    'وتظهر للتدقيق. أضِف التصاريح من شاشة «الدوام المرن والعمل الإضافي».';
+
+  const cmpSlices = dashComplianceSlices(s);
+  const violPct = dashPct(s.employeesWithViolations, s.employeesAnalyzed);
+  TIME.chart('#chartCompliance', {
+    mode: 'donut', hole: 0.5, slices: cmpSlices, unit: 'موظف', tipLabel: 'الموظفون',
+    centerValue: fmt(100 - violPct) + '%', centerLabel: 'نسبة الالتزام', height: 300
+  });
+  host('complianceNote').innerHTML = 'نسبة الالتزام = الموظفون بلا أي مخالفة ÷ إجمالي الموظفين المُحلَّلين. ' +
+    'المخالفون: <b>' + fmt(s.employeesWithViolations) + '</b> موظفاً (' + violPct + '%).';
+
+  applyDashBadges(s);
+}
+
+/* عند العودة إلى اللوحة: تحديث خفيف للملخص والبيانات دون إعادة تحميل كل الجداول */
+let dashBusy = false;
+function onScreenEnter(id) {
+  if (id !== 'home' || dashBusy || typeof TIME === 'undefined') return;
+  dashBusy = true;
+  const done = () => { dashBusy = false; };
+  Promise.all([
+    fetch(`${API}/summary`).then(r => r.json()),
+    fetch(`${API}/staging-summary`).then(r => r.json())
+  ]).then(([sm, st]) => {
+    if (st) renderQuality(st);
+    if (sm) renderKpis(sm);
+    done();
+  }, () => { done(); });
+}
+
+loadWorkApprovals();
+refresh();
+</script>
+
+<script>
+/* ============================================================================
+   تشغيل اللوحة المركزية: القائمة اليمنى + الشاشات + المخططات ثلاثية الأبعاد
+   ----------------------------------------------------------------------------
+   كل شاشة هنا مرتبطة بعنصر واحد فقط من عناصر الصفحة [data-screen]، ولا تظهر
+   أي شاشة إلا بعد الضغط على عنصرها في القائمة الجانبية.
+   ========================================================================== */
+(function () {
+  var GROUPS = [
+    {
+      title: 'الرئيسية', items: [
+        { id: 'home', icon: '🏠', label: 'لوحة المؤشرات', hint: 'مؤشرات تنفيذية + مخططات ثلاثية الأبعاد', keywords: 'لوحة مركزية رئيسية ملخص dashboard' }
+      ]
+    },
+    {
+      title: 'البيانات والتحليل', items: [
+        { id: 'upload', icon: '📤', label: 'رفع ملف البصمات', hint: 'رفع .xlsx ثم التحليل وتوليد التقارير', keywords: 'استيراد xlsx بصمة معالجة رفع' },
+        { id: 'quality', icon: '🧪', label: 'جودة البيانات', hint: 'توزيع حالات التحضير كما وردت في الملف', keywords: 'جودة تحضير حالات صفوف' }
+      ]
+    },
+    {
+      title: 'النتائج القانونية', items: [
+        { id: 'kpi', icon: '📈', label: 'المؤشرات التنفيذية', hint: 'كل مؤشرات المواد 7 و112 و118 + المكافأة', keywords: 'مؤشرات ملخص مؤشر' },
+        { id: 'violations', icon: '🚨', label: 'المخالفات المرصودة', hint: 'اليومي والأسبوعي والشهري والتزام الإدارات', keywords: 'مخالفات عقوبات تأخير غياب التزام' },
+        { id: 'reportsSection', icon: '🧾', label: 'قائمة التقارير', hint: 'معاينة وتنزيل كل تقرير على حدة', keywords: 'تقارير excel معاينة تنزيل' }
+      ]
+    },
+    {
+      title: 'القواعد والإعدادات', items: [
+        { id: 'calendarSection', icon: '🗓️', label: 'تقويم العطل', hint: 'العطل الرسمية والدينية المعتمدة في التحليل', keywords: 'عطل تقويم رسمية دينية' },
+        { id: 'weeklyRuleSection', icon: '⚖️', label: 'قاعدة المادة 118/ج', hint: 'الحدّ الأسبوعي وسقف الناتج وأيام الخصم', keywords: '118 ج حد أسبوعي خصم مرنة' },
+        { id: 'shiftSection', icon: '👮', label: 'الورديات والاستثناءات', hint: 'الجدول الشهري للورديات والإعفاءات الإدارية', keywords: 'ورديات جدول شهري راحة حراسة' },
+        { id: 'workTimeSection', icon: '⏱', label: 'الدوام المرن والإضافي', hint: 'حدود الإضافي والتصاريح والموافقة المسبقة', keywords: 'إضافي مرن تصاريح موافقة مسبقة overtime' }
+      ]
+    },
+    {
+      title: 'الصيانة والبيانات',
+      items: [
+        { id: 'cleanup', icon: '🧹', label: 'تنظيف البيانات', hint: 'تفريغ الجداول لاستقبال بيانات جديدة', keywords: 'تنظيف حذف تفريغ مسح بيانات جديدة صيانة' }
+      ]
+    },
+    {
+      title: 'أنظمة أخرى', items: [
+        { id: 'ext-dep', icon: '📁', label: 'المغادرات والإجازات', hint: 'واجهة مراجعة تقارير المغادرات والإجازات', href: '/index.html' },
+        { id: 'ext-dev', icon: '🧪', label: 'لوحة المطوّرين', hint: 'كل نقاط النهاية واختبارها', href: '/console.html' }
+      ]
+    }
+  ];
+
+  window.APP = window.APP || {};
+
+  /* ============================================================================
+     منطقة تنظيف البيانات: قراءة حالة الجداول من الخدمة ثم تنفيذ التنظيف بتأكيد نصّي.
+     تُهيَّأ قبل تشغيل القشرة (shell) لتكون جاهزة عند أي دخول للشاشة — بما في ذلك
+     الروابط المباشرة (#/cleanup). وبعد نجاح التنظيف تُعاد شاشة الرفع إلى حالتها
+     الأولى وتُحدَّث اللوحة (صارت بلا نتائج).
+     ========================================================================== */
+  if (typeof TIME.maintenance === 'function') {
+    window.APP.maintenance = TIME.maintenance({
+      root: 'cleanup',
+      api: '/api/v1/maintenance',
+      onDone: function () {
+        try {
+          el.file.value = ''; current = null; el.picked.hidden = true; el.run.disabled = true;
+          el.src.innerHTML = ''; clearErr();
+          ['st1', 'st2', 'st3'].forEach(function (k) { step(k, ''); });
+          if (typeof refresh === 'function') refresh();
+        } catch (e) { /* تحديث الواجهة تجميلي — نتجاهل أي خطأ هنا */ }
+      }
+    });
+    window.APP.maintenance.load();
+  }
+
+  window.APP.shell = TIME.shell({
+    brand: { icon: '⏱', title: 'TIME', sub: 'نظام الحضور والانصراف' },
+    home: 'home',
+    footNote: 'تحليل بصمات الحضور والانصراف — المواد 7 و112 و118/ب و118/ج وقاعدة الـ 15 يوماً للمكافأة.',
+    groups: GROUPS,
+    onScreen: function (id) {
+      if (typeof onScreenEnter === 'function') onScreenEnter(id);
+      /* شاشة تنظيف البيانات: قراءة حالة الجداول عند كل دخول إليها */
+      if (id === 'cleanup' && window.APP && window.APP.maintenance) window.APP.maintenance.load();
+    }
+  });
+
+  /* زر التنظيف في الشريط العلوي — متاح من كل الشاشات */
+  var tbCleanup = document.getElementById('tbCleanup');
+  if (tbCleanup) tbCleanup.addEventListener('click', function () { window.APP.shell.go('cleanup'); });
+
+  /* أي زر في الصفحة يحمل data-goto ينتقل للشاشة المطلوبة */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-goto]') : null;
+    if (!b || b.classList.contains('rail-item')) return;
+    var id = b.getAttribute('data-goto');
+    if (id) window.APP.shell.go(id);
+  });
+
+  /* زر «إعادة التحليل الآن» في الواجهة الترحيبية */
+  var rz = document.getElementById('heroReanalyze');
+  if (rz) {
+    rz.addEventListener('click', function () {
+      var b = document.getElementById('wtReanalyze');
+      TIME.toast('🔄 جارٍ إعادة التحليل بالقواعد السارية… ستُحدَّث المؤشرات والمخططات تلقائياً.', '', 6000);
+      if (b) b.click();
+    });
+  }
+
+  /* «معالجة الملف» في شاشة الرفع تُبقي المستخدم على الشاشة ثم تعود للوحة */
+  applyDashBadges(window.__punchSummary);
+})();
+</script>
+</body>
+</html>
